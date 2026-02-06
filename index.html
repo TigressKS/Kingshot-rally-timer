@@ -1,820 +1,360 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kingshot Rally Timer (UTC)</title>
-  <style>
-    :root{
-      --border:#ddd;
-      --text:#111;
-      --muted:#6b7280;
-      --card:#fff;
-      --bg:#0b1020;
-      --danger:#b00020;
-      --dangerBg:#ffe9ec;
-      --ok:#0b6b2f;
-      --okBg:#e9fff0;
-      --soft:#f6f6f6;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kingshot Rally Timer (UTC)</title>
 
-    body{
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      margin: 0;
-      color: var(--text);
-      background: #f3f4f6;
-    }
+<style>
+:root{
+  --bg-dark:#0b1020;
+  --bg-light:#f3f4f6;
+  --card:#ffffff;
+  --border:#d1d5db;
+  --text:#111827;
+  --muted:#6b7280;
+  --danger:#b00020;
+  --danger-bg:#ffe9ec;
+  --ok:#065f46;
+  --ok-bg:#ecfdf5;
+}
 
-    .wrap{ max-width: 1100px; margin: 0 auto; padding: 14px; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background:var(--bg-light);
+  color:var(--text);
+}
 
-    /* Banner */
-    .banner{
-      background:
-        radial-gradient(1200px 400px at 20% 10%, rgba(255,215,0,.25), transparent 60%),
-        radial-gradient(900px 450px at 80% 0%, rgba(255,80,80,.22), transparent 60%),
-        linear-gradient(120deg, #0b1020, #1b2350 55%, #0b1020);
-      color: #fff;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      padding: 18px 14px;
-    }
-    .bannerInner{ max-width: 1100px; margin: 0 auto; display:flex; align-items:center; gap: 12px; }
-    .crest{
-      width: 44px; height: 44px; flex: 0 0 44px;
-      border-radius: 12px;
-      background: rgba(255,255,255,.08);
-      display:grid; place-items:center;
-      border: 1px solid rgba(255,255,255,.12);
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-    }
-    .bannerTitle{
-      font-size: 18px; font-weight: 800; letter-spacing: .02em; margin: 0;
-    }
-    .bannerSub{
-      margin: 2px 0 0;
-      font-size: 13px;
-      color: rgba(255,255,255,.78);
-      line-height: 1.25;
-    }
+.banner{
+  background:
+    linear-gradient(120deg,#0b1020,#1f2a5c,#0b1020);
+  padding:28px 16px;
+  text-align:center;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
 
-    /* Cards / inputs */
-    .card{
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-      margin: 14px 0;
-      box-shadow: 0 8px 20px rgba(17, 24, 39, .06);
-    }
+.banner h1{
+  margin:0;
+  font-size:36px;
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  background:linear-gradient(90deg,#ffd166,#ff4d6d,#7c3aed);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
 
-    label{ display:block; font-weight: 700; margin: 10px 0 6px; }
-    input, textarea{
-      width: 100%;
-      box-sizing: border-box;
-      padding: 11px 12px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      font-size: 16px;
-      background: #fff;
-    }
+.banner p{
+  margin-top:8px;
+  font-size:15px;
+  color:rgba(255,255,255,.85);
+}
 
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-    @media (min-width: 900px){
-      .grid{ grid-template-columns: 1.1fr 1fr 1fr 1.1fr; }
-    }
+.wrap{
+  max-width:1100px;
+  margin:0 auto;
+  padding:16px;
+}
 
-    .hint{ font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.35; }
-    .pill{ display:inline-block; padding: 2px 8px; border-radius: 999px; background:#f1f5f9; border:1px solid #e5e7eb; font-size: 12px; }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 8px 20px rgba(0,0,0,.06);
+}
 
-    .btns{ display:flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; align-items:center; }
-    button{
-      padding: 12px 14px;
-      border: 0;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button.primary{ background:#111827; color:#fff; }
-    button.ghost{ background:#eef2f7; }
-    button.danger{ background: var(--dangerBg); color: #7a0010; }
+label{
+  font-weight:700;
+  display:block;
+  margin:10px 0 6px;
+}
 
-    .status{ font-size: 13px; color: var(--muted); }
+input{
+  width:100%;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  font-size:15px;
+}
 
-    .messages{
-      margin-top: 10px;
-      font-size: 13px;
-      line-height: 1.4;
-    }
-    .messages.ok{
-      color: var(--ok);
-      background: var(--okBg);
-      border: 1px solid rgba(11,107,47,.18);
-      padding: 10px 12px;
-      border-radius: 12px;
-    }
-    .messages.warn{
-      color: var(--danger);
-      background: var(--dangerBg);
-      border: 1px solid rgba(176,0,32,.18);
-      padding: 10px 12px;
-      border-radius: 12px;
-    }
+.grid{
+  display:grid;
+  gap:12px;
+  grid-template-columns:1fr;
+}
+@media(min-width:900px){
+  .grid{ grid-template-columns:1.2fr 1fr 1fr 1.2fr; }
+}
 
-    /* Alliance blocks */
-    .allyHead{
-      display:flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-    .tagWrap{ flex: 1 1 180px; }
-    .actions{ display:flex; gap: 10px; }
+.timeRow{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+.timeRow input{ text-align:center; }
 
-    .playersTable{
-      display:flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 8px;
-    }
+.btns{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
 
-    .pRow{
-      display:grid;
-      grid-template-columns: 1.8fr 1fr auto;
-      gap: 8px;
-      align-items: center;
-      padding: 10px;
-      border: 1px solid #e5e7eb;
-      border-radius: 14px;
-      background: #fff;
-    }
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:12px;
+  font-size:15px;
+  cursor:pointer;
+}
+.primary{ background:#111827; color:white; }
+.ghost{ background:#eef2f7; }
+.danger{ background:var(--danger-bg); color:var(--danger); }
 
-    .pRow.collision{
-      border-color: rgba(176,0,32,.35);
-      background: #fff4f6;
-    }
+.status{ font-size:13px; color:var(--muted); }
 
-    .pRow .meta{
-      grid-column: 1 / -1;
-      font-size: 12px;
-      color: var(--muted);
-      display:flex;
-      justify-content: space-between;
-      gap: 8px;
-      margin-top: 2px;
-    }
+.messages{
+  margin-top:10px;
+  font-size:13px;
+}
+.messages.warn{
+  background:var(--danger-bg);
+  color:var(--danger);
+  border-radius:12px;
+  padding:10px;
+}
+.messages.ok{
+  background:var(--ok-bg);
+  color:var(--ok);
+  border-radius:12px;
+  padding:10px;
+}
 
-    .pRow .startBadge{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      padding: 2px 8px;
-      border-radius: 999px;
-      border: 1px solid #e5e7eb;
-      background: #f8fafc;
-      color: #111827;
-      white-space: nowrap;
-    }
+.allyHead{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
 
-    .out{
-      white-space: pre-wrap;
-      word-break: break-word;
-      background: var(--soft);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 12px;
-      font-size: 14px;
-    }
-  </style>
+.players{
+  margin-top:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.playerRow{
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px;
+}
+
+.playerGrid{
+  display:grid;
+  grid-template-columns:1.6fr .6fr .6fr .6fr auto;
+  gap:8px;
+}
+
+.playerGrid input{ text-align:center; }
+.playerGrid input.pName{ text-align:left; }
+
+.playerRow.collision{
+  background:#fff4f6;
+  border-color:rgba(176,0,32,.35);
+}
+
+.meta{
+  margin-top:6px;
+  font-size:12px;
+  color:var(--muted);
+  display:flex;
+  justify-content:space-between;
+}
+
+.out{
+  white-space:pre-wrap;
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+</style>
 </head>
 
 <body>
-  <div class="banner">
-    <div class="bannerInner">
-      <div class="crest" aria-hidden="true">
-        <!-- Simple decorative crest (not an official logo) -->
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2l7 4v6c0 5-3.5 9.5-7 10-3.5-.5-7-5-7-10V6l7-4z" stroke="rgba(255,255,255,.85)" stroke-width="1.6" />
-          <path d="M8 12h8M10 9h4M10 15h4" stroke="rgba(255,255,255,.75)" stroke-width="1.6" stroke-linecap="round"/>
-        </svg>
+<div class="banner">
+  <h1>Kingshot Rally Timer</h1>
+  <p>UTC-based sequential rally timing calculator</p>
+</div>
+
+<div class="wrap">
+
+<div class="card">
+  <div class="grid">
+    <div>
+      <label>Target name</label>
+      <input id="title" value="Turret 4">
+    </div>
+
+    <div>
+      <label>Baseline time (UTC)</label>
+      <div class="timeRow">
+        <input id="baseH" placeholder="H">
+        <input id="baseM" placeholder="M">
+        <input id="baseS" placeholder="S">
       </div>
-      <div>
-        <p class="bannerTitle">Kingshot Rally Timer (UTC)</p>
-        <p class="bannerSub">Set baseline + spacing, enter alliance tags once, and generate a copy-ready timing block.</p>
+    </div>
+
+    <div>
+      <label>Hit spacing</label>
+      <div class="timeRow">
+        <input id="spaceH" placeholder="H">
+        <input id="spaceM" placeholder="M">
+        <input id="spaceS" placeholder="S">
       </div>
+    </div>
+
+    <div>
+      <label>Alliance order (optional)</label>
+      <input id="order" placeholder="war, dth, avr">
     </div>
   </div>
 
-  <div class="wrap">
-    <div class="card">
-      <div class="grid">
-        <div>
-          <label for="title">Target name</label>
-          <input id="title" value="Turret 4" />
-        </div>
-        <div>
-          <label for="base">Baseline time (UTC)</label>
-          <input id="base" inputmode="numeric" placeholder="HH:MM:SS" value="13:58:00" />
-        </div>
-        <div>
-          <label for="spacing">Hit spacing</label>
-          <input id="spacing" inputmode="numeric" placeholder="e.g. 3s or 1m" value="3s" />
-          <div class="hint">Examples: <span class="mono">3s</span>, <span class="mono">10s</span>, <span class="mono">30s</span>, <span class="mono">1m</span>, <span class="mono">1m30s</span></div>
-        </div>
-        <div>
-          <label for="order">Alliance order (optional)</label>
-          <input id="order" placeholder="WAR, DTH, AVR" />
-          <div class="hint">If blank, uses the order shown below.</div>
-        </div>
-      </div>
+  <label>Who hits last (optional)</label>
+  <input id="lastHit" placeholder="war=Killian; avr=Lia">
 
-      <label for="lastHit">Who hits last (optional)</label>
-      <input id="lastHit" placeholder="WAR=Killian; AVR=Lia" />
-      <div class="hint">
-        Format: <span class="mono">TAG=Name</span> separated by semicolons.
-        Names must match exactly.
-      </div>
-
-      <div class="btns">
-        <button class="ghost" id="addAlliance">+ Add alliance</button>
-        <button class="primary" id="generate">Generate</button>
-        <button class="ghost" id="copy">Copy output</button>
-        <button class="ghost" id="loadExample">Load example</button>
-        <button class="danger" id="clearAll">Clear all</button>
-        <span class="status" id="status"></span>
-      </div>
-
-      <div id="messages" class="messages"></div>
-    </div>
-
-    <div class="card">
-      <div class="hint">Alliances</div>
-      <div id="alliances"></div>
-    </div>
-
-    <div class="card">
-      <div class="hint">Output</div>
-      <div id="output" class="out mono"></div>
-    </div>
+  <div class="btns">
+    <button class="ghost" id="addAlliance">+ Add alliance</button>
+    <button class="primary" id="generate">Generate</button>
+    <button class="ghost" id="copy">Copy output</button>
+    <button class="danger" id="clear">Clear</button>
+    <span class="status" id="status"></span>
   </div>
+
+  <div id="messages" class="messages"></div>
+</div>
+
+<div class="card">
+  <div id="alliances"></div>
+</div>
+
+<div class="card">
+  <div class="out" id="output"></div>
+</div>
+
+</div>
 
 <script>
-  const STORAGE_KEY = "ks_rally_timer_v6_rows";
-  const $ = (id) => document.getElementById(id);
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,"0");
+const toSec = (h,m,s)=>h*3600+m*60+s;
 
-  function pad2(n){ return String(n).padStart(2,'0'); }
+function read(el,max=2){
+  el.value = el.value.replace(/\D/g,"").slice(0,max);
+  return Number(el.value||0);
+}
 
-  function parseBaseUTC(str){
-    const m = (str || "").trim().match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
-    if (!m) return null;
-    const hh = Number(m[1]), mm = Number(m[2]), ss = Number(m[3]);
-    if (hh < 0 || hh > 23 || mm > 59 || ss > 59) return null;
-    return hh*3600 + mm*60 + ss;
-  }
+function hmsStr(sec){
+  sec=((sec%86400)+86400)%86400;
+  return pad(Math.floor(sec/3600))+":"+pad(Math.floor(sec%3600/60))+":"+pad(sec%60);
+}
 
-  function parseMarch(str){
-    const s = (str || "").trim();
-    const m = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
-    if (!m) return null;
-    const a = Number(m[1]), b = Number(m[2]);
-    if (m[3] === undefined) {
-      if (b > 59) return null;
-      return a*60 + b; // MM:SS
-    }
-    const c = Number(m[3]);
-    if (b > 59 || c > 59) return null;
-    return a*3600 + b*60 + c; // HH:MM:SS
-  }
+function addAlliance(){
+  const box=document.createElement("div");
+  box.className="card";
+  box.innerHTML=`
+    <div class="allyHead">
+      <input class="tag" placeholder="Alliance tag">
+      <button class="danger remove">Remove</button>
+    </div>
+    <div class="players"></div>
+    <button class="ghost addPlayer">+ Add player</button>
+  `;
+  const players=box.querySelector(".players");
 
-  function parseSpacing(str){
-    const s = (str || "").trim().toLowerCase();
-    if (!s) return null;
-    if (/^\d+$/.test(s)) return Number(s);
-    const m = s.match(/^(?:(\d+)\s*m)?\s*(?:(\d+)\s*s)?$/);
-    if (!m) return null;
-    const mins = m[1] ? Number(m[1]) : 0;
-    const secs = m[2] ? Number(m[2]) : 0;
-    const total = mins*60 + secs;
-    return total > 0 ? total : null;
-  }
-
-  function secondsToHMS(sec){
-    const day = 24*3600;
-    let s = ((sec % day) + day) % day;
-    const hh = Math.floor(s/3600);
-    s -= hh*3600;
-    const mm = Math.floor(s/60);
-    const ss = s - mm*60;
-    return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
-  }
-
-  function parseLastHitMap(str){
-    const map = new Map();
-    (str||"").split(";").map(x=>x.trim()).filter(Boolean).forEach(part=>{
-      const idx = part.indexOf("=");
-      if (idx > 0) {
-        const tag = part.slice(0, idx).trim().toUpperCase();
-        const name = part.slice(idx+1).trim();
-        if (tag && name) map.set(tag, name);
-      }
-    });
-    return map;
-  }
-
-  function setStatus(msg){
-    $("status").textContent = msg || "";
-    if (msg) setTimeout(()=>{ $("status").textContent = ""; }, 1400);
-  }
-
-  function setMessages(lines, isWarn){
-    const box = $("messages");
-    if (!lines || lines.length === 0){
-      box.className = "messages";
-      box.innerHTML = "";
-      return;
-    }
-    box.className = "messages " + (isWarn ? "warn" : "ok");
-    box.innerHTML = (isWarn ? "<b>Warnings</b><br>" : "<b>OK</b><br>") + lines.map(x => "• " + escapeHtml(x)).join("<br>");
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, (c) => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
-  }
-
-  function currentAllianceBlocks(){
-    return Array.from($("alliances").querySelectorAll("[data-alliance]"));
-  }
-
-  // --- March input helpers (auto-format + sanitize) ---
-  function sanitizeTimeInput(raw){
-    // allow digits + colon only, max 2 colons
-    let s = (raw || "").replace(/[^\d:]/g, "");
-    const parts = s.split(":").slice(0, 3); // max HH:MM:SS
-    // prevent empty extra segments like "1::2"
-    return parts.join(":");
-  }
-
-  function formatTimeAsYouType(raw){
-    // goal: 1:1 -> 01:01, 12:3 -> 12:03, 1:11 -> 01:11
-    let s = sanitizeTimeInput(raw);
-
-    // If user hasn't typed a colon yet, don't force formatting.
-    if (!s.includes(":")) return s;
-
-    const parts = s.split(":");
-
-    // If HH:MM:SS, keep HH 1-2 digits, pad MM/SS to 2 when present
-    // If MM:SS, pad both to 2 when present
-    if (parts.length === 2){
-      let mm = parts[0];
-      let ss = parts[1];
-
-      // avoid padding if user is mid-typing first segment and second is empty
-      if (mm.length >= 1 && mm.length <= 2) mm = mm.padStart(2, "0");
-      if (ss.length === 1) ss = ss.padStart(2, "0");
-      return `${mm}:${ss}`;
-    }
-
-    if (parts.length === 3){
-      let hh = parts[0].slice(0,2);
-      let mm = parts[1].slice(0,2);
-      let ss = parts[2].slice(0,2);
-
-      if (hh.length === 1) hh = hh; // don't pad hours
-      if (mm.length === 1) mm = mm.padStart(2, "0");
-      if (ss.length === 1) ss = ss.padStart(2, "0");
-      return `${hh}:${mm}:${ss}`;
-    }
-
-    return s;
-  }
-
-  function normalizeTimeOnBlur(raw){
-    // final tidy:
-    // If MM:SS -> pad to 2:2, if HH:MM:SS -> pad MM/SS
-    let s = sanitizeTimeInput(raw);
-    if (!s) return "";
-    const parts = s.split(":");
-
-    if (parts.length === 1){
-      // just digits: treat as seconds? nope—leave as-is so user notices
-      return s;
-    }
-
-    if (parts.length === 2){
-      let mm = parts[0];
-      let ss = parts[1];
-      if (mm.length === 1) mm = mm.padStart(2, "0");
-      if (ss.length === 1) ss = ss.padStart(2, "0");
-      if (ss.length === 0) ss = "00";
-      return `${mm}:${ss}`;
-    }
-
-    if (parts.length === 3){
-      let hh = parts[0].slice(0,2);
-      let mm = parts[1].slice(0,2);
-      let ss = parts[2].slice(0,2);
-      if (mm.length === 1) mm = mm.padStart(2, "0");
-      if (ss.length === 1) ss = ss.padStart(2, "0");
-      if (mm.length === 0) mm = "00";
-      if (ss.length === 0) ss = "00";
-      return `${hh}:${mm}:${ss}`;
-    }
-
-    return s;
-  }
-
-  function addAllianceBlock(tag="", players=[]){
-    const wrap = document.createElement("div");
-    wrap.className = "card";
-    wrap.setAttribute("data-alliance","1");
-
-    wrap.innerHTML = `
-      <div class="allyHead">
-        <div class="tagWrap">
-          <label>Alliance tag</label>
-          <input class="tag" placeholder="WAR" value="${escapeHtml(tag)}" />
-        </div>
-        <div class="actions">
-          <button class="ghost moveUp" type="button">↑</button>
-          <button class="ghost moveDown" type="button">↓</button>
-          <button class="danger removeAlliance" type="button">Remove</button>
-        </div>
+  function addPlayer(){
+    const row=document.createElement("div");
+    row.className="playerRow";
+    row.innerHTML=`
+      <div class="playerGrid">
+        <input class="pName" placeholder="Name">
+        <input class="pH" placeholder="H">
+        <input class="pM" placeholder="M">
+        <input class="pS" placeholder="S">
+        <button class="danger rm">✕</button>
       </div>
-
-      <label>Players</label>
-      <div class="playersTable"></div>
-      <div class="btns">
-        <button class="ghost addPlayer" type="button">+ Add player</button>
+      <div class="meta">
+        <span>Start: <b>--:--:--</b></span>
+        <span>Status: —</span>
       </div>
-      <div class="hint">Name + March time (MM:SS or HH:MM:SS). March time auto-formats while you type.</div>
     `;
+    row.querySelector(".rm").onclick=()=>row.remove();
+    players.appendChild(row);
+  }
 
-    // tag uppercase + autosave
-    const tagInput = wrap.querySelector(".tag");
-    tagInput.value = (tagInput.value || "").toUpperCase();
-    tagInput.addEventListener("input", () => {
-      tagInput.value = tagInput.value.toUpperCase();
-      saveState();
+  box.querySelector(".addPlayer").onclick=addPlayer;
+  box.querySelector(".remove").onclick=()=>box.remove();
+  addPlayer();
+  $("alliances").appendChild(box);
+}
+
+function generate(){
+  const base=toSec(read(baseH),read(baseM),read(baseS));
+  const spacing=toSec(read(spaceH),read(spaceM),read(spaceS));
+  if(spacing<=0){ $("messages").className="messages warn"; $("messages").textContent="Hit spacing must be > 0"; return; }
+
+  const out=[];
+  out.push(`=== Rally Timings for ${title.value} ===`);
+  out.push(`Baseline Time: ${hmsStr(base)} (UTC)`);
+
+  document.querySelectorAll(".playerRow").forEach(r=>r.classList.remove("collision"));
+
+  const map={};
+  document.querySelectorAll(".card .card").forEach(()=>{});
+
+  const groups=[];
+  document.querySelectorAll("#alliances .card").forEach(a=>{
+    const tag=a.querySelector(".tag").value;
+    if(!tag) return;
+    const list=[];
+    a.querySelectorAll(".playerRow").forEach(p=>{
+      const name=p.querySelector(".pName").value;
+      const sec=toSec(read(p.querySelector(".pH")),read(p.querySelector(".pM")),read(p.querySelector(".pS")));
+      if(name && sec>0) list.push({tag,name,sec,row:p});
     });
-
-    const table = wrap.querySelector(".playersTable");
-    const addBtn = wrap.querySelector(".addPlayer");
-
-    function addPlayerRow(name="", march=""){
-      const row = document.createElement("div");
-      row.className = "pRow";
-      row.innerHTML = `
-        <input class="pName" placeholder="Name" value="${escapeHtml(name)}" />
-        <input class="pMarch" placeholder="MM:SS" inputmode="numeric" value="${escapeHtml(march)}" />
-        <button class="danger removeRow" type="button">✕</button>
-        <div class="meta">
-          <span class="small mono">Start: <span class="startBadge">--:--:--</span></span>
-          <span class="small mono">Status: <span class="rowStatus">—</span></span>
-        </div>
-      `;
-
-      const marchInput = row.querySelector(".pMarch");
-
-      // Prevent non-time chars + auto-format as user types
-      marchInput.addEventListener("input", () => {
-        const before = marchInput.value;
-        const after = formatTimeAsYouType(before);
-        marchInput.value = after;
-        saveState();
-      });
-
-      // Final normalize on blur
-      marchInput.addEventListener("blur", () => {
-        marchInput.value = normalizeTimeOnBlur(marchInput.value);
-        saveState();
-      });
-
-      row.querySelector(".pName").addEventListener("input", saveState);
-
-      row.querySelector(".removeRow").addEventListener("click", () => {
-        row.remove();
-        saveState();
-      });
-
-      table.appendChild(row);
-    }
-
-    // load given players or start with one empty row
-    if (Array.isArray(players) && players.length){
-      players.forEach(p => addPlayerRow(p.name || "", p.march || ""));
-    } else {
-      addPlayerRow();
-    }
-
-    addBtn.addEventListener("click", () => {
-      addPlayerRow();
-      saveState();
-    });
-
-    // move / remove alliance
-    wrap.querySelector(".removeAlliance").addEventListener("click", () => {
-      wrap.remove();
-      saveState();
-    });
-    wrap.querySelector(".moveUp").addEventListener("click", () => {
-      const prev = wrap.previousElementSibling;
-      if (prev) wrap.parentNode.insertBefore(wrap, prev);
-      saveState();
-    });
-    wrap.querySelector(".moveDown").addEventListener("click", () => {
-      const next = wrap.nextElementSibling;
-      if (next) wrap.parentNode.insertBefore(next, wrap);
-      saveState();
-    });
-
-    $("alliances").appendChild(wrap);
-    saveState();
-  }
-
-  function getFinalAllianceOrder(groups){
-    const typed = ($("order").value || "")
-      .split(",").map(x=>x.trim().toUpperCase()).filter(Boolean);
-
-    if (typed.length){
-      const seen = new Set();
-      const final = [];
-      for (const t of typed){
-        if (groups.has(t) && !seen.has(t)) { final.push(t); seen.add(t); }
-      }
-      const rest = Array.from(groups.keys()).filter(t=>!seen.has(t)).sort((a,b)=>a.localeCompare(b));
-      return final.concat(rest);
-    }
-
-    // default: on-screen order
-    const blockOrder = currentAllianceBlocks()
-      .map(b => (b.querySelector(".tag").value || "").trim().toUpperCase())
-      .filter(Boolean);
-
-    const seen = new Set();
-    const final = [];
-    for (const t of blockOrder){
-      if (groups.has(t) && !seen.has(t)) { final.push(t); seen.add(t); }
-    }
-    const rest = Array.from(groups.keys()).filter(t=>!seen.has(t)).sort((a,b)=>a.localeCompare(b));
-    return final.concat(rest);
-  }
-
-  function clearRowHighlights(){
-    currentAllianceBlocks().forEach(b => {
-      b.querySelectorAll(".pRow").forEach(r => {
-        r.classList.remove("collision");
-        r.querySelector(".startBadge").textContent = "--:--:--";
-        r.querySelector(".rowStatus").textContent = "—";
-      });
-    });
-  }
-
-  function generate(){
-    clearRowHighlights();
-
-    const title = ($("title").value || "").trim() || "Target";
-    const baseSec = parseBaseUTC($("base").value);
-    if (baseSec === null) { setMessages(["Baseline time must be HH:MM:SS (UTC). Example: 13:58:00"], true); return; }
-
-    const spacingSec = parseSpacing($("spacing").value);
-    if (spacingSec === null) { setMessages(["Hit spacing examples: 3s, 10s, 1m, 1m30s, 90s"], true); return; }
-
-    const lastHitMap = parseLastHitMap($("lastHit").value);
-
-    const notes = [];
-    const groups = new Map(); // tag -> player objects
-    const blocks = currentAllianceBlocks();
-
-    // collect players from UI rows
-    for (const b of blocks){
-      const tag = (b.querySelector(".tag").value || "").trim().toUpperCase();
-      const rows = Array.from(b.querySelectorAll(".pRow"));
-      if (!tag && rows.every(r => !r.querySelector(".pName").value.trim() && !r.querySelector(".pMarch").value.trim())) continue;
-
-      if (!tag){
-        notes.push("An alliance block is missing a tag.");
-        continue;
-      }
-
-      const arr = [];
-      rows.forEach(r => {
-        const name = r.querySelector(".pName").value.trim();
-        const marchStr = normalizeTimeOnBlur(r.querySelector(".pMarch").value.trim());
-        r.querySelector(".pMarch").value = marchStr; // keep tidy in UI
-
-        if (!name && !marchStr) return;
-
-        const marchSec = parseMarch(marchStr);
-        if (!name) { notes.push(`Missing name in ${tag}.`); r.querySelector(".rowStatus").textContent = "Missing name"; return; }
-        if (marchSec === null) { notes.push(`Bad march time for ${tag} / ${name}: "${marchStr}"`); r.querySelector(".rowStatus").textContent = "Bad march time"; return; }
-
-        arr.push({ tag, name, marchStr, marchSec, rowEl: r });
-      });
-
-      if (arr.length === 0){
-        notes.push(`No valid players found for ${tag}.`);
-        continue;
-      }
-
-      groups.set(tag, arr);
-    }
-
-    if (groups.size === 0){
-      setMessages(["Add at least one alliance with players."], true);
-      return;
-    }
-
-    const finalOrder = getFinalAllianceOrder(groups);
-
-    const outLines = [];
-    outLines.push(`=== Rally Timings for ${title} ===`);
-    outLines.push(`Baseline Time: ${secondsToHMS(baseSec)} (UTC)`);
-
-    // collision detection
-    const startMap = new Map(); // startHMS -> array of player objects
-    const warnings = [...notes];
-
-    function addStart(startHMS, p){
-      if (!startMap.has(startHMS)) startMap.set(startHMS, []);
-      startMap.get(startHMS).push(p);
-    }
-
-    for (let g = 0; g < finalOrder.length; g++){
-      const tag = finalOrder[g];
-      let arr = groups.get(tag);
-      if (!arr) continue;
-
-      // Sort slowest march first
-      arr = arr.slice().sort((a,b)=> b.marchSec - a.marchSec || a.name.localeCompare(b.name));
-
-      // Force last hitter last
-      const lastName = lastHitMap.get(tag);
-      if (lastName){
-        const idx = arr.findIndex(x => x.name.toLowerCase() === lastName.toLowerCase());
-        if (idx >= 0){
-          const [picked] = arr.splice(idx, 1);
-          arr.push(picked);
-        } else {
-          warnings.push(`Last hitter not found in ${tag}: "${lastName}"`);
-        }
-      }
-
-      // Assign landing by spacing, last lands at baseline
-      const count = arr.length;
-      arr.forEach((p, i) => {
-        const landing = baseSec - ((count - 1 - i) * spacingSec);
-        const start = landing - p.marchSec;
-        const startHMS = secondsToHMS(start);
-        p.startHMS = startHMS;
-
-        outLines.push(`(${tag}) ${p.name}: ${startHMS} UTC`);
-        addStart(startHMS, p);
-
-        // update UI row badge
-        p.rowEl.querySelector(".startBadge").textContent = startHMS;
-        p.rowEl.querySelector(".rowStatus").textContent = "OK";
-      });
-
-      if (g !== finalOrder.length - 1) outLines.push("");
-    }
-
-    // Apply collision highlighting
-    for (const [t, list] of startMap.entries()){
-      if (list.length > 1){
-        const who = list.map(p => `(${p.tag}) ${p.name}`).join(", ");
-        warnings.push(`Collision at ${t} UTC: ${who}`);
-        list.forEach(p => {
-          p.rowEl.classList.add("collision");
-          p.rowEl.querySelector(".rowStatus").textContent = "COLLISION";
-        });
-      }
-    }
-
-    $("output").textContent = outLines.join("\n");
-    saveState();
-
-    if (warnings.length) setMessages(warnings, true);
-    else setMessages(["Generated successfully."], false);
-
-    setStatus("Saved.");
-  }
-
-  async function copyOutput(){
-    const text = ($("output").textContent || "").trim();
-    if (!text){ setStatus("Nothing to copy."); return; }
-    try{
-      await navigator.clipboard.writeText(text);
-      setStatus("Copied ✅");
-    }catch{
-      setStatus("Copy failed (browser permissions).");
-    }
-  }
-
-  function clearAll(){
-    $("title").value = "Turret 4";
-    $("base").value = "13:58:00";
-    $("spacing").value = "3s";
-    $("order").value = "";
-    $("lastHit").value = "";
-    $("alliances").innerHTML = "";
-    $("output").textContent = "";
-    setMessages([], false);
-    addAllianceBlock();
-    saveState();
-    setStatus("Cleared.");
-  }
-
-  function loadExample(){
-    $("title").value = "Turret 4";
-    $("base").value = "13:58:00";
-    $("spacing").value = "3s";
-    $("order").value = "WAR, DTH, AVR";
-    $("lastHit").value = "WAR=Killian; AVR=Lia";
-
-    $("alliances").innerHTML = "";
-    addAllianceBlock("WAR", [
-      { name:"RealJoker", march:"01:11" },
-      { name:"MHD",      march:"01:00" },
-      { name:"Tam",      march:"00:54" },
-      { name:"yamal",    march:"00:53" },
-      { name:"Killian",  march:"00:53" }
-    ]);
-    addAllianceBlock("DTH", [
-      { name:"Grey", march:"00:49" }
-    ]);
-    addAllianceBlock("AVR", [
-      { name:"Coffee", march:"00:40" },
-      { name:"tony",   march:"00:31" },
-      { name:"Lia",    march:"00:25" }
-    ]);
-
-    generate();
-  }
-
-  function saveState(){
-    const blocks = currentAllianceBlocks().map(b => {
-      const tag = (b.querySelector(".tag").value || "");
-      const players = Array.from(b.querySelectorAll(".pRow")).map(r => ({
-        name: r.querySelector(".pName").value || "",
-        march: r.querySelector(".pMarch").value || ""
-      }));
-      return { tag, players };
-    });
-
-    const state = {
-      title: $("title").value,
-      base: $("base").value,
-      spacing: $("spacing").value,
-      order: $("order").value,
-      lastHit: $("lastHit").value,
-      blocks
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }
-
-  function loadState(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return false;
-      const s = JSON.parse(raw);
-
-      if (s.title !== undefined) $("title").value = s.title;
-      if (s.base !== undefined) $("base").value = s.base;
-      if (s.spacing !== undefined) $("spacing").value = s.spacing;
-      if (s.order !== undefined) $("order").value = s.order;
-      if (s.lastHit !== undefined) $("lastHit").value = s.lastHit;
-
-      $("alliances").innerHTML = "";
-      if (Array.isArray(s.blocks) && s.blocks.length){
-        s.blocks.forEach(b => addAllianceBlock((b.tag||""), (b.players||[])));
-      } else {
-        addAllianceBlock();
-      }
-      return true;
-    }catch{
-      return false;
-    }
-  }
-
-  // wire up
-  $("addAlliance").addEventListener("click", ()=>addAllianceBlock());
-  $("generate").addEventListener("click", generate);
-  $("copy").addEventListener("click", copyOutput);
-  $("loadExample").addEventListener("click", loadExample);
-  $("clearAll").addEventListener("click", clearAll);
-
-  ["title","base","spacing","order","lastHit"].forEach(id=>{
-    $(id).addEventListener("input", saveState);
+    if(list.length) groups.push({tag,list});
   });
 
-  // init
-  const loaded = loadState();
-  if (!loaded) addAllianceBlock();
+  groups.forEach(g=>{
+    g.list.sort((a,b)=>b.sec-a.sec);
+    g.list.forEach((p,i)=>{
+      const start=hmsStr(base - (g.list.length-1-i)*spacing - p.sec);
+      out.push(`(${g.tag}) ${p.name}: ${start} UTC`);
+      if(!map[start]) map[start]=[];
+      map[start].push(p);
+      p.row.querySelector(".meta").children[0].innerHTML=`Start: <b>${start}</b>`;
+    });
+    out.push("");
+  });
+
+  Object.values(map).forEach(list=>{
+    if(list.length>1) list.forEach(p=>p.row.classList.add("collision"));
+  });
+
+  output.textContent=out.join("\n");
+}
+
+addAlliance();
+addAlliance.onclick=addAlliance;
+generate.onclick=generate;
+copy.onclick=()=>navigator.clipboard.writeText(output.textContent);
+clear.onclick=()=>location.reload();
 </script>
 </body>
 </html>
