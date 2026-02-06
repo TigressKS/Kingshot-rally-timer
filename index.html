@@ -5,73 +5,502 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Kingshot Rally Timer (UTC)</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 20px; }
-    h1 { margin-bottom: 6px; }
-    .muted { color:#666; margin-bottom:16px; }
-    .card { border:1px solid #ddd; border-radius:12px; padding:14px; margin-bottom:14px; }
-    label { font-weight:600; display:block; margin-bottom:6px; }
-    input, textarea { width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; font-size:15px; }
-    textarea { min-height:120px; font-family: monospace; }
-    .row { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
-    button { padding:10px 14px; border-radius:10px; border:0; cursor:pointer; }
-    button.primary { background:#111; color:#fff; }
-    button.ghost { background:#f1f1f1; }
-    .out { white-space:pre-wrap; font-family:monospace; background:#f6f6f6; padding:12px; border-radius:10px; }
-    .small { font-size:13px; color:#666; }
+    :root{
+      --border:#ddd; --bg:#f6f6f6; --text:#111; --muted:#666;
+      --card:#fff; --danger:#b00020; --ok:#0b6b2f;
+    }
+    body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 16px; color:var(--text); background:#fff; }
+    .wrap{ max-width: 1100px; margin: 0 auto; }
+    h1{ margin: 0 0 6px; font-size: 22px; }
+    .muted{ color:var(--muted); margin: 0 0 14px; line-height: 1.35; }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+    label{ display:block; font-weight: 650; margin: 10px 0 6px; }
+    input, textarea{
+      width:100%; box-sizing:border-box; padding: 10px 12px;
+      border:1px solid var(--border); border-radius: 12px; font-size: 16px;
+    }
+    textarea{ min-height: 120px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .grid{
+      display:grid; gap: 12px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 860px){
+      .grid{ grid-template-columns: 1.2fr 1fr 1fr 1.2fr; }
+    }
+    .btns{ display:flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; align-items:center; }
+    button{
+      padding: 12px 14px; border: 0; border-radius: 12px; cursor: pointer; font-size: 16px;
+    }
+    button.primary{ background:#111; color:#fff; }
+    button.ghost{ background:#efefef; }
+    button.danger{ background:#ffe9ec; color: #7a0010; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .out{
+      white-space: pre-wrap; word-break: break-word;
+      background: var(--bg); border:1px solid var(--border); border-radius: 14px; padding: 12px;
+      font-size: 14px;
+    }
+    .hint{ font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.35; }
+    .status{ font-size: 13px; color: var(--muted); }
+    .warn{ color: var(--danger); font-weight: 650; }
+    .ok{ color: var(--ok); font-weight: 650; }
+    .allyHead{
+      display:flex; gap: 10px; align-items: center; flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .allyHead .tagWrap{ flex: 1 1 160px; }
+    .allyHead .actions{ display:flex; gap: 10px; }
+    .pill{ display:inline-block; padding: 2px 8px; border-radius: 999px; background:#f2f2f2; border:1px solid var(--border); font-size:12px; }
   </style>
 </head>
 <body>
+<div class="wrap">
+  <h1>Kingshot Rally Timer (UTC)</h1>
+  <p class="muted">
+    Enter alliance tags once. Paste <span class="pill mono">Name 01:11</span> lines only.
+    Output is grouped with blank lines, ready to paste into chat.
+  </p>
 
-<h1>Kingshot Rally Timer (UTC)</h1>
-<p class="muted">Alliance tag entered once. Paste names + march times only.</p>
+  <div class="card">
+    <div class="grid">
+      <div>
+        <label for="title">Target name</label>
+        <input id="title" value="Turret 4" />
+      </div>
+      <div>
+        <label for="base">Baseline time (UTC)</label>
+        <input id="base" inputmode="numeric" placeholder="HH:MM:SS" value="13:58:00" />
+      </div>
+      <div>
+        <label for="spacing">Hit spacing</label>
+        <input id="spacing" inputmode="numeric" placeholder="e.g. 3s or 1m" value="3s" />
+        <div class="hint">Examples: <span class="mono">3s</span>, <span class="mono">10s</span>, <span class="mono">30s</span>, <span class="mono">1m</span>, <span class="mono">1m30s</span></div>
+      </div>
+      <div>
+        <label for="order">Alliance order (optional)</label>
+        <input id="order" placeholder="WAR, DTH, AVR" />
+        <div class="hint">If blank, it uses the order shown below.</div>
+      </div>
+    </div>
 
-<div class="card row">
-  <div>
-    <label>Target name</label>
-    <input id="title" value="Turret 4">
+    <label for="lastHit">Who hits last (optional)</label>
+    <input id="lastHit" placeholder="WAR=Killian; AVR=Lia" />
+    <div class="hint">Format: <span class="mono">TAG=Name</span> separated by semicolons. Names must match your player lines exactly.</div>
+
+    <div class="btns">
+      <button class="ghost" id="addAlliance">+ Add alliance</button>
+      <button class="primary" id="generate">Generate</button>
+      <button class="ghost" id="copy">Copy output</button>
+      <button class="ghost" id="loadExample">Load example</button>
+      <button class="danger" id="clearAll">Clear all</button>
+      <span class="status" id="status"></span>
+    </div>
+
+    <div id="messages" class="hint"></div>
   </div>
-  <div>
-    <label>Baseline time (UTC)</label>
-    <input id="base" placeholder="HH:MM:SS" value="13:58:00">
+
+  <div class="card">
+    <div class="hint">Alliances</div>
+    <div id="alliances"></div>
   </div>
-  <div>
-    <label>Hit spacing</label>
-    <input id="spacing" placeholder="e.g. 3s or 1m" value="3s">
+
+  <div class="card">
+    <div class="hint">Output</div>
+    <div id="output" class="out mono"></div>
   </div>
 </div>
 
-<div class="card">
-  <label>Alliance order (optional)</label>
-  <input id="order" placeholder="WAR, Dth, AVr">
-</div>
+<script>
+  const STORAGE_KEY = "ks_rally_timer_v5_blocks";
+  const $ = (id) => document.getElementById(id);
 
-<div class="card">
-  <label>Who hits last (optional)</label>
-  <input id="lastHit" placeholder="WAR=Killian; AVr=Lia">
-</div>
+  function pad2(n){ return String(n).padStart(2,'0'); }
 
-<!-- Alliance blocks -->
-<div class="card">
-  <label>Alliance tag</label>
-  <input class="tag" placeholder="WAR">
-  <label style="margin-top:8px;">Players (Name + March time)</label>
-  <textarea class="players" placeholder="RealJoker 01:11&#10;MHD 01:00&#10;Tam 00:54"></textarea>
-</div>
+  function parseBaseUTC(str){
+    const m = (str || "").trim().match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+    if (!m) return null;
+    const hh = Number(m[1]), mm = Number(m[2]), ss = Number(m[3]);
+    if (hh < 0 || hh > 23 || mm > 59 || ss > 59) return null;
+    return hh*3600 + mm*60 + ss;
+  }
 
-<div class="card">
-  <label>Alliance tag</label>
-  <input class="tag" placeholder="Dth">
-  <label style="margin-top:8px;">Players</label>
-  <textarea class="players" placeholder="Grey 00:49"></textarea>
-</div>
+  function parseMarch(str){
+    const s = (str || "").trim();
+    const m = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+    if (!m) return null;
+    const a = Number(m[1]), b = Number(m[2]);
+    if (m[3] === undefined) { if (b > 59) return null; return a*60 + b; }
+    const c = Number(m[3]); if (b > 59 || c > 59) return null;
+    return a*3600 + b*60 + c;
+  }
 
-<div class="card">
-  <label>Alliance tag</label>
-  <input class="tag" placeholder="AVr">
-  <label style="margin-top:8px;">Players</label>
-  <textarea class="players" placeholder="Coffee 00:40&#10;tony 00:31&#10;Lia 00:25"></textarea>
-</div>
+  function parseSpacing(str){
+    const s = (str || "").trim().toLowerCase();
+    if (!s) return null;
+    if (/^\d+$/.test(s)) return Number(s);
+    const m = s.match(/^(?:(\d+)\s*m)?\s*(?:(\d+)\s*s)?$/);
+    if (!m) return null;
+    const mins = m[1] ? Number(m[1]) : 0;
+    const secs = m[2] ? Number(m[2]) : 0;
+    const total = mins*60 + secs;
+    return total > 0 ? total : null;
+  }
 
-<div class="card">
-  <button class="primary" onclick="generate()">Generate</button>
-  <button
+  function secondsToHMS(sec){
+    const day = 24*3600;
+    let s = ((sec % day) + day) % day;
+    const hh = Math.floor(s/3600);
+    s -= hh*3600;
+    const mm = Math.floor(s/60);
+    const ss = s - mm*60;
+    return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
+  }
+
+  function parseLastHitMap(str){
+    const map = new Map();
+    (str||"").split(";").map(x=>x.trim()).filter(Boolean).forEach(part=>{
+      const idx = part.indexOf("=");
+      if (idx > 0) {
+        const tag = part.slice(0, idx).trim().toUpperCase();
+        const name = part.slice(idx+1).trim();
+        if (tag && name) map.set(tag, name);
+      }
+    });
+    return map;
+  }
+
+  function setStatus(msg){
+    $("status").textContent = msg;
+    if (msg) setTimeout(()=>{ $("status").textContent = ""; }, 1400);
+  }
+
+  function setMessages(html, isWarn=false){
+    $("messages").innerHTML = isWarn ? `<span class="warn">${html}</span>` : `<span class="ok">${html}</span>`;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function currentAllianceBlocks(){
+    return Array.from($("alliances").querySelectorAll("[data-alliance]"));
+  }
+
+  function addAllianceBlock(tag="", playersText=""){
+    const wrap = document.createElement("div");
+    wrap.className = "card";
+    wrap.setAttribute("data-alliance","1");
+
+    wrap.innerHTML = `
+      <div class="allyHead">
+        <div class="tagWrap">
+          <label>Alliance tag</label>
+          <input class="tag" placeholder="WAR" value="${escapeHtml(tag)}" />
+        </div>
+        <div class="actions">
+          <button class="ghost moveUp" type="button">↑</button>
+          <button class="ghost moveDown" type="button">↓</button>
+          <button class="danger remove" type="button">Remove</button>
+        </div>
+      </div>
+
+      <label>Players (Name + March time)</label>
+      <textarea class="players" placeholder="RealJoker 01:11&#10;MHD 01:00">${escapeHtml(playersText)}</textarea>
+      <div class="hint">One per line. Example: <span class="mono">RealJoker 01:11</span></div>
+    `;
+
+    // tag uppercase + autosave
+    const tagInput = wrap.querySelector(".tag");
+    tagInput.addEventListener("input", () => {
+      tagInput.value = tagInput.value.toUpperCase();
+      saveState();
+    });
+    wrap.querySelector(".players").addEventListener("input", saveState);
+
+    // move / remove
+    wrap.querySelector(".remove").addEventListener("click", () => {
+      wrap.remove();
+      saveState();
+    });
+    wrap.querySelector(".moveUp").addEventListener("click", () => {
+      const prev = wrap.previousElementSibling;
+      if (prev) wrap.parentNode.insertBefore(wrap, prev);
+      saveState();
+    });
+    wrap.querySelector(".moveDown").addEventListener("click", () => {
+      const next = wrap.nextElementSibling;
+      if (next) wrap.parentNode.insertBefore(next, wrap);
+      saveState();
+    });
+
+    $("alliances").appendChild(wrap);
+    saveState();
+  }
+
+  function getAllianceData(){
+    const blocks = currentAllianceBlocks();
+    const groups = new Map();
+    const notes = [];
+
+    for (const b of blocks){
+      const tagRaw = (b.querySelector(".tag").value || "").trim().toUpperCase();
+      const text = (b.querySelector(".players").value || "").trim();
+      if (!tagRaw && !text) continue; // ignore blank block
+
+      if (!tagRaw){
+        notes.push("An alliance block is missing a tag.");
+        continue;
+      }
+
+      const lines = text.split("\n").map(x=>x.trim()).filter(Boolean);
+      const arr = [];
+      for (const line of lines){
+        // expects last token to be time
+        const m = line.match(/^(.*?)\s+(\d{1,2}:\d{2}(?::\d{2})?)$/);
+        if (!m){
+          notes.push(`Bad line in ${tagRaw}: "${line}" (use: Name 01:11)`);
+          continue;
+        }
+        const name = m[1].trim();
+        const marchStr = m[2].trim();
+        const marchSec = parseMarch(marchStr);
+        if (!name) { notes.push(`Missing name in ${tagRaw}: "${line}"`); continue; }
+        if (marchSec === null) { notes.push(`Bad march time in ${tagRaw}: "${marchStr}"`); continue; }
+        arr.push({ tag: tagRaw, name, marchStr, marchSec });
+      }
+
+      if (arr.length === 0){
+        notes.push(`No valid players found for ${tagRaw}.`);
+        continue;
+      }
+
+      groups.set(tagRaw, arr);
+    }
+
+    return { groups, notes };
+  }
+
+  function getFinalAllianceOrder(groups){
+    const typed = ($("order").value || "").split(",").map(x=>x.trim().toUpperCase()).filter(Boolean);
+
+    if (typed.length){
+      const seen = new Set();
+      const final = [];
+      for (const t of typed){
+        if (groups.has(t) && !seen.has(t)) { final.push(t); seen.add(t); }
+      }
+      // append remaining tags not listed
+      const rest = Array.from(groups.keys()).filter(t=>!seen.has(t)).sort((a,b)=>a.localeCompare(b));
+      return final.concat(rest);
+    }
+
+    // if no typed order, use on-screen block order
+    const blockOrder = currentAllianceBlocks()
+      .map(b => (b.querySelector(".tag").value || "").trim().toUpperCase())
+      .filter(Boolean);
+
+    const seen = new Set();
+    const final = [];
+    for (const t of blockOrder){
+      if (groups.has(t) && !seen.has(t)) { final.push(t); seen.add(t); }
+    }
+    // append remaining tags not in blocks (shouldn't happen, but safe)
+    const rest = Array.from(groups.keys()).filter(t=>!seen.has(t)).sort((a,b)=>a.localeCompare(b));
+    return final.concat(rest);
+  }
+
+  function generate(){
+    const title = ($("title").value || "").trim() || "Target";
+    const baseSec = parseBaseUTC($("base").value);
+    if (baseSec === null) { setMessages("Baseline time must be HH:MM:SS (UTC). Example: 13:58:00", true); return; }
+
+    const spacingSec = parseSpacing($("spacing").value);
+    if (spacingSec === null) { setMessages("Hit spacing examples: 3s, 10s, 1m, 1m30s, 90s", true); return; }
+
+    const lastHitMap = parseLastHitMap($("lastHit").value);
+
+    const { groups, notes } = getAllianceData();
+    if (groups.size === 0) { setMessages("Add at least one alliance with players.", true); return; }
+
+    const finalOrder = getFinalAllianceOrder(groups);
+
+    // Build output + warnings (duplicates)
+    const outLines = [];
+    const warnings = [...notes];
+
+    outLines.push(`=== Rally Timings for ${title} ===`);
+    outLines.push(`Baseline Time: ${secondsToHMS(baseSec)} (UTC)`);
+
+    // Track collisions (same second)
+    const seenStarts = new Map(); // time -> array of "TAG Name"
+    function noteCollision(t, who){
+      if (!seenStarts.has(t)) seenStarts.set(t, []);
+      seenStarts.get(t).push(who);
+    }
+
+    for (let g = 0; g < finalOrder.length; g++){
+      const tag = finalOrder[g];
+      let arr = groups.get(tag);
+      if (!arr) continue;
+
+      // Sort by march (slowest first) => generally earlier starts near top
+      arr = arr.slice().sort((a,b)=> b.marchSec - a.marchSec || a.name.localeCompare(b.name));
+
+      // Force last hitter last
+      const lastName = lastHitMap.get(tag);
+      if (lastName){
+        const idx = arr.findIndex(x => x.name.toLowerCase() === lastName.toLowerCase());
+        if (idx >= 0){
+          const [picked] = arr.splice(idx, 1);
+          arr.push(picked);
+        } else {
+          warnings.push(`Last hitter not found in ${tag}: "${lastName}"`);
+        }
+      }
+
+      // Assign landing by spacing, last lands at baseline
+      const count = arr.length;
+      arr.forEach((p, i) => {
+        const landing = baseSec - ((count - 1 - i) * spacingSec);
+        const start = landing - p.marchSec;
+        const startHMS = secondsToHMS(start);
+        p.startHMS = startHMS;
+
+        outLines.push(`(${tag}) ${p.name}: ${startHMS} UTC`);
+        noteCollision(startHMS, `(${tag}) ${p.name}`);
+      });
+
+      if (g !== finalOrder.length - 1) outLines.push("");
+    }
+
+    // Collision warnings (same second)
+    for (const [t, whos] of seenStarts.entries()){
+      if (whos.length > 1){
+        warnings.push(`Same start second ${t} UTC: ${whos.join(", ")}`);
+      }
+    }
+
+    $("output").textContent = outLines.join("\n");
+    saveState();
+
+    if (warnings.length){
+      setMessages(`Warnings:<br>${warnings.map(w=>`• ${escapeHtml(w)}`).join("<br>")}`, true);
+    } else {
+      setMessages("Generated.", false);
+    }
+    setStatus("Saved.");
+  }
+
+  async function copyOutput(){
+    const text = ($("output").textContent || "").trim();
+    if (!text){ setStatus("Nothing to copy."); return; }
+    try{
+      await navigator.clipboard.writeText(text);
+      setStatus("Copied ✅");
+    }catch{
+      setStatus("Copy failed (browser permissions).");
+    }
+  }
+
+  function clearAll(){
+    $("title").value = "Turret 4";
+    $("base").value = "13:58:00";
+    $("spacing").value = "3s";
+    $("order").value = "";
+    $("lastHit").value = "";
+    $("alliances").innerHTML = "";
+    $("output").textContent = "";
+    setMessages("");
+    addAllianceBlock();
+    saveState();
+    setStatus("Cleared.");
+  }
+
+  function loadExample(){
+    $("title").value = "Turret 4";
+    $("base").value = "13:58:00";
+    $("spacing").value = "3s";
+    $("order").value = "WAR, DTH, AVR";
+    $("lastHit").value = "WAR=Killian; AVR=Lia";
+
+    $("alliances").innerHTML = "";
+    addAllianceBlock("WAR",
+`RealJoker 01:11
+MHD 01:00
+Tam 00:54
+yamal 00:53
+Killian 00:53`);
+
+    addAllianceBlock("DTH",
+`Grey 00:49`);
+
+    addAllianceBlock("AVR",
+`Coffee 00:40
+tony 00:31
+Lia 00:25`);
+
+    generate();
+  }
+
+  function saveState(){
+    const blocks = currentAllianceBlocks().map(b => ({
+      tag: (b.querySelector(".tag").value || ""),
+      players: (b.querySelector(".players").value || "")
+    }));
+
+    const state = {
+      title: $("title").value,
+      base: $("base").value,
+      spacing: $("spacing").value,
+      order: $("order").value,
+      lastHit: $("lastHit").value,
+      blocks
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const s = JSON.parse(raw);
+
+      if (s.title !== undefined) $("title").value = s.title;
+      if (s.base !== undefined) $("base").value = s.base;
+      if (s.spacing !== undefined) $("spacing").value = s.spacing;
+      if (s.order !== undefined) $("order").value = s.order;
+      if (s.lastHit !== undefined) $("lastHit").value = s.lastHit;
+
+      $("alliances").innerHTML = "";
+      if (Array.isArray(s.blocks) && s.blocks.length){
+        s.blocks.forEach(b => addAllianceBlock(b.tag || "", b.players || ""));
+      } else {
+        addAllianceBlock();
+      }
+      if (s.output) $("output").textContent = s.output;
+
+      return true;
+    }catch{
+      return false;
+    }
+  }
+
+  // wire up
+  $("addAlliance").addEventListener("click", ()=>addAllianceBlock());
+  $("generate").addEventListener("click", generate);
+  $("copy").addEventListener("click", copyOutput);
+  $("loadExample").addEventListener("click", loadExample);
+  $("clearAll").addEventListener("click", clearAll);
+
+  ["title","base","spacing","order","lastHit"].forEach(id=>{
+    $(id).addEventListener("input", saveState);
+  });
+
+  // init
+  const loaded = loadState();
+  if (!loaded) addAllianceBlock();
+</script>
+</body>
+</html>
