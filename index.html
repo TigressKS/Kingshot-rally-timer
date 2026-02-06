@@ -3,458 +3,75 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rally Timing Calculator (UTC)</title>
+  <title>Kingshot Rally Timer (UTC)</title>
   <style>
-    :root { --border:#ddd; --bg:#fafafa; --text:#111; --muted:#666; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 24px; color: var(--text); }
-    h1 { margin: 0 0 8px; font-size: 22px; }
-    p { margin: 0 0 16px; color: var(--muted); }
-    .grid { display: grid; gap: 16px; grid-template-columns: 1fr; max-width: 1100px; }
-    @media (min-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
-    .card { border: 1px solid var(--border); border-radius: 14px; padding: 16px; background: white; }
-    label { display:block; font-weight: 650; margin: 12px 0 6px; }
-    input, textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; font-size: 15px; }
-    textarea { min-height: 280px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    .row { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .row3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    .row4 { display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
-    .btns { display:flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; align-items: center; }
-    button { padding: 10px 14px; border: 0; border-radius: 12px; cursor: pointer; font-size: 15px; }
-    button.primary { background: #111; color: white; }
-    button.ghost { background: #f1f1f1; }
-    pre { white-space: pre-wrap; word-break: break-word; background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin: 0; min-height: 280px; }
-    .hint { font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.35; }
-    .small { font-size: 13px; color: var(--muted); }
-    .error { color: #b00020; font-weight: 650; }
-    .ok { color: #0b6b2f; font-weight: 650; }
-    .pill { display:inline-block; padding: 2px 8px; border-radius: 999px; background: #f2f2f2; border: 1px solid var(--border); font-size: 12px; margin-left: 6px; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 20px; }
+    h1 { margin-bottom: 6px; }
+    .muted { color:#666; margin-bottom:16px; }
+    .card { border:1px solid #ddd; border-radius:12px; padding:14px; margin-bottom:14px; }
+    label { font-weight:600; display:block; margin-bottom:6px; }
+    input, textarea { width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; font-size:15px; }
+    textarea { min-height:120px; font-family: monospace; }
+    .row { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+    button { padding:10px 14px; border-radius:10px; border:0; cursor:pointer; }
+    button.primary { background:#111; color:#fff; }
+    button.ghost { background:#f1f1f1; }
+    .out { white-space:pre-wrap; font-family:monospace; background:#f6f6f6; padding:12px; border-radius:10px; }
+    .small { font-size:13px; color:#666; }
   </style>
 </head>
 <body>
-  <h1>Rally Timing Calculator (UTC)</h1>
-  <p>Paste players in any order. Choose alliance order + who hits last per alliance. Output is grouped and copy-ready.</p>
 
-  <div class="grid">
-    <div class="card">
-      <div class="row4">
-        <div>
-          <label for="title">Header / Target name</label>
-          <input id="title" type="text" value="Turret 4" />
-        </div>
-        <div>
-          <label for="baseline">Baseline time (UTC)</label>
-          <input id="baseline" type="text" inputmode="numeric" placeholder="HH:MM:SS" value="13:58:00" />
-        </div>
-        <div>
-          <label for="spacing">Hit spacing (seconds)</label>
-          <input id="spacing" type="number" min="1" value="3" />
-        </div>
-        <div>
-          <label for="defaultMarch">Default march (optional)</label>
-          <input id="defaultMarch" type="text" inputmode="numeric" placeholder="MM:SS" value="" />
-        </div>
-      </div>
+<h1>Kingshot Rally Timer (UTC)</h1>
+<p class="muted">Alliance tag entered once. Paste names + march times only.</p>
 
-      <label for="allianceOrder">Alliance order (comma-separated)</label>
-      <input id="allianceOrder" type="text" placeholder="WAR, Dth, AVr" value="WAR, Dth, AVr" />
-      <div class="hint">This controls the group order in the output, regardless of how the input is pasted.</div>
-
-      <label for="lastHit">Who hits last per alliance (optional)</label>
-      <input id="lastHit" type="text" placeholder="WAR=Killian; AVr=Lia; Dth=Grey" value="WAR=Killian; AVr=Lia" />
-      <div class="hint">Format: <span class="pill">TAG=Name</span> separated by semicolons. That person will be forced to appear last inside that alliance group.</div>
-
-      <label for="input">Players input (any order)</label>
-      <textarea id="input" spellcheck="false"></textarea>
-
-      <div class="hint">
-        Accepted line formats (pick one and stay consistent):
-        <br>• <b>(WAR) RealJoker 01:11</b>
-        <br>• <b>WAR, RealJoker, 01:11</b>
-        <br>• <b>RealJoker (WAR) 01:11</b>
-        <br>March time can be <b>MM:SS</b> or <b>HH:MM:SS</b>. If omitted, Default march will be used (if set).
-      </div>
-
-      <div class="btns">
-        <button class="primary" id="calcBtn">Generate timings</button>
-        <button class="ghost" id="copyBtn">Copy output</button>
-        <button class="ghost" id="loadExampleBtn">Load example</button>
-        <button class="ghost" id="clearBtn">Clear</button>
-        <span id="status" class="small"></span>
-      </div>
-    </div>
-
-    <div class="card">
-      <label>Output</label>
-      <pre id="output"></pre>
-      <div id="errors" class="hint"></div>
-    </div>
+<div class="card row">
+  <div>
+    <label>Target name</label>
+    <input id="title" value="Turret 4">
   </div>
+  <div>
+    <label>Baseline time (UTC)</label>
+    <input id="base" placeholder="HH:MM:SS" value="13:58:00">
+  </div>
+  <div>
+    <label>Hit spacing</label>
+    <input id="spacing" placeholder="e.g. 3s or 1m" value="3s">
+  </div>
+</div>
 
-<script>
-  // ---------- Utilities ----------
-  const $ = (id) => document.getElementById(id);
+<div class="card">
+  <label>Alliance order (optional)</label>
+  <input id="order" placeholder="WAR, Dth, AVr">
+</div>
 
-  function pad2(n){ return String(n).padStart(2,'0'); }
+<div class="card">
+  <label>Who hits last (optional)</label>
+  <input id="lastHit" placeholder="WAR=Killian; AVr=Lia">
+</div>
 
-  function parseHMS(str){
-    // MM:SS or HH:MM:SS -> seconds
-    if (!str) return null;
-    const s = str.trim();
-    const m = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
-    if (!m) return null;
-    const a = Number(m[1]);
-    const b = Number(m[2]);
-    const c = m[3] !== undefined ? Number(m[3]) : null;
+<!-- Alliance blocks -->
+<div class="card">
+  <label>Alliance tag</label>
+  <input class="tag" placeholder="WAR">
+  <label style="margin-top:8px;">Players (Name + March time)</label>
+  <textarea class="players" placeholder="RealJoker 01:11&#10;MHD 01:00&#10;Tam 00:54"></textarea>
+</div>
 
-    if (c === null) { // MM:SS
-      if (b > 59) return null;
-      return a * 60 + b;
-    } else { // HH:MM:SS
-      if (b > 59 || c > 59) return null;
-      return a * 3600 + b * 60 + c;
-    }
-  }
+<div class="card">
+  <label>Alliance tag</label>
+  <input class="tag" placeholder="Dth">
+  <label style="margin-top:8px;">Players</label>
+  <textarea class="players" placeholder="Grey 00:49"></textarea>
+</div>
 
-  function parseBaselineUTC(str){
-    // HH:MM:SS -> seconds from 00:00:00
-    const s = str.trim();
-    const m = s.match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
-    if (!m) return null;
-    const hh = Number(m[1]), mm = Number(m[2]), ss = Number(m[3]);
-    if (mm > 59 || ss > 59 || hh > 23) return null;
-    return hh * 3600 + mm * 60 + ss;
-  }
+<div class="card">
+  <label>Alliance tag</label>
+  <input class="tag" placeholder="AVr">
+  <label style="margin-top:8px;">Players</label>
+  <textarea class="players" placeholder="Coffee 00:40&#10;tony 00:31&#10;Lia 00:25"></textarea>
+</div>
 
-  function secondsToHMS(sec){
-    // roll within 24h
-    const day = 24 * 3600;
-    let s = ((sec % day) + day) % day;
-    const hh = Math.floor(s / 3600);
-    s -= hh * 3600;
-    const mm = Math.floor(s / 60);
-    const ss = s - mm * 60;
-    return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
-  }
-
-  function parseAllianceOrder(str){
-    return (str || "")
-      .split(",")
-      .map(x => x.trim())
-      .filter(Boolean);
-  }
-
-  function parseLastHitMap(str){
-    // "WAR=Killian; AVr=Lia"
-    const map = new Map();
-    (str || "")
-      .split(";")
-      .map(x => x.trim())
-      .filter(Boolean)
-      .forEach(part => {
-        const idx = part.indexOf("=");
-        if (idx > 0) {
-          const tag = part.slice(0, idx).trim();
-          const name = part.slice(idx + 1).trim();
-          if (tag && name) map.set(tag, name);
-        }
-      });
-    return map;
-  }
-
-  function parseLine(line){
-    // Returns { tag, name, marchSeconds } or { error }
-    const raw = line.trim();
-    if (!raw) return null;
-
-    // find march time at end
-    const timeMatch = raw.match(/(\d{1,2}:\d{2}(?::\d{2})?)\s*$/);
-    let marchStr = null;
-    let rest = raw;
-    if (timeMatch) {
-      marchStr = timeMatch[1];
-      rest = raw.slice(0, timeMatch.index).trim();
-    }
-
-    // CSV format: TAG, Name, time
-    const csvParts = raw.split(",").map(x => x.trim()).filter(Boolean);
-    if (csvParts.length >= 2) {
-      const last = csvParts[csvParts.length - 1];
-      if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(last)) {
-        const march = parseHMS(last);
-        const tag = csvParts[0].replace(/[()]/g, "");
-        const name = csvParts.slice(1, csvParts.length - 1).join(", ").trim();
-        if (tag && name && march !== null) return { tag, name, marchSeconds: march };
-      }
-    }
-
-    // formats with (TAG)
-    let tag = null, name = null;
-
-    const tagFirst = rest.match(/^\(([^)]+)\)\s*(.+)$/);
-    if (tagFirst) {
-      tag = tagFirst[1].trim();
-      name = tagFirst[2].trim();
-    } else {
-      const tagLast = rest.match(/^(.+?)\s*\(([^)]+)\)$/);
-      if (tagLast) {
-        name = tagLast[1].trim();
-        tag = tagLast[2].trim();
-      }
-    }
-
-    // fallback "TAG Name"
-    if (!tag || !name) {
-      const parts = rest.split(/\s+/).filter(Boolean);
-      if (parts.length >= 2) {
-        tag = parts[0].replace(/[()]/g, "");
-        name = parts.slice(1).join(" ").trim();
-      }
-    }
-
-    const marchSeconds = marchStr ? parseHMS(marchStr) : null;
-
-    if (!tag || !name) return { error: `Couldn't parse alliance/name: "${raw}"` };
-    return { tag, name, marchSeconds };
-  }
-
-  // ---------- App ----------
-  const STORAGE_KEY = "rally_calc_v2_spacing";
-
-  function saveState(){
-    const state = {
-      title: $("title").value,
-      baseline: $("baseline").value,
-      spacing: $("spacing").value,
-      defaultMarch: $("defaultMarch").value,
-      allianceOrder: $("allianceOrder").value,
-      lastHit: $("lastHit").value,
-      input: $("input").value
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }
-
-  function loadState(){
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const s = JSON.parse(raw);
-      if (s.title !== undefined) $("title").value = s.title;
-      if (s.baseline !== undefined) $("baseline").value = s.baseline;
-      if (s.spacing !== undefined) $("spacing").value = s.spacing;
-      if (s.defaultMarch !== undefined) $("defaultMarch").value = s.defaultMarch;
-      if (s.allianceOrder !== undefined) $("allianceOrder").value = s.allianceOrder;
-      if (s.lastHit !== undefined) $("lastHit").value = s.lastHit;
-      if (s.input !== undefined) $("input").value = s.input;
-    } catch {}
-  }
-
-  function generate(){
-    $("status").textContent = "";
-    $("errors").innerHTML = "";
-
-    const title = $("title").value.trim() || "Target";
-    const baselineStr = $("baseline").value.trim();
-    const baselineSec = parseBaselineUTC(baselineStr);
-
-    if (baselineSec === null) {
-      $("output").textContent = "";
-      $("errors").innerHTML = `<span class="error">Baseline time must be HH:MM:SS (UTC), e.g. 13:58:00</span>`;
-      return;
-    }
-
-    const spacingSec = Number($("spacing").value || 0);
-    if (!Number.isFinite(spacingSec) || spacingSec < 1) {
-      $("output").textContent = "";
-      $("errors").innerHTML = `<span class="error">Hit spacing must be at least 1 second.</span>`;
-      return;
-    }
-
-    const defaultMarchStr = $("defaultMarch").value.trim();
-    const defaultMarchSec = defaultMarchStr ? parseHMS(defaultMarchStr) : null;
-    if (defaultMarchStr && defaultMarchSec === null) {
-      $("output").textContent = "";
-      $("errors").innerHTML = `<span class="error">Default march must be MM:SS or HH:MM:SS</span>`;
-      return;
-    }
-
-    const order = parseAllianceOrder($("allianceOrder").value);
-    const lastHitMap = parseLastHitMap($("lastHit").value);
-
-    const lines = $("input").value.split("\n");
-    const parsed = [];
-    const problems = [];
-
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      const res = parseLine(line);
-      if (!res) continue;
-      if (res.error) {
-        problems.push(res.error);
-        continue;
-      }
-      let marchSeconds = res.marchSeconds;
-      if (marchSeconds === null) {
-        if (defaultMarchSec !== null) marchSeconds = defaultMarchSec;
-        else {
-          problems.push(`No march time found and no default set: "${line.trim()}"`);
-          continue;
-        }
-      }
-      parsed.push({ tag: res.tag, name: res.name, marchSeconds });
-    }
-
-    if (parsed.length === 0) {
-      $("output").textContent = "";
-      $("errors").innerHTML = `<span class="error">No valid player lines found. Try “(WAR) RealJoker 01:11”.</span>`;
-      return;
-    }
-
-    // Group by alliance
-    const groups = new Map();
-    for (const p of parsed) {
-      if (!groups.has(p.tag)) groups.set(p.tag, []);
-      groups.get(p.tag).push({ ...p });
-    }
-
-    // Final alliance order: user list first, then remaining tags alphabetical
-    const tagsAll = Array.from(groups.keys());
-    const seen = new Set();
-    const finalOrder = [];
-    for (const t of order) {
-      if (groups.has(t) && !seen.has(t)) { finalOrder.push(t); seen.add(t); }
-    }
-    tagsAll.sort((a,b)=>a.localeCompare(b)).forEach(t=>{
-      if (!seen.has(t)) finalOrder.push(t);
-    });
-
-    const outputLines = [];
-    outputLines.push(`=== Rally Timings for ${title} ===`);
-    outputLines.push(`Baseline Time: ${secondsToHMS(baselineSec)} (UTC)`);
-
-    for (const tag of finalOrder) {
-      let arr = groups.get(tag) || [];
-
-      // Sort within alliance (stable + predictable):
-      // 1) march time descending so slower march generally appears earlier (starts earlier)
-      // 2) name for tie-break
-      arr.sort((a,b)=> b.marchSeconds - a.marchSeconds || a.name.localeCompare(b.name));
-
-      // Force last hitter last (if provided)
-      const lastName = lastHitMap.get(tag);
-      if (lastName) {
-        const idx = arr.findIndex(x => x.name.toLowerCase() === lastName.toLowerCase());
-        if (idx >= 0) {
-          const [picked] = arr.splice(idx, 1);
-          arr.push(picked);
-        } else {
-          problems.push(`Last hitter not found in ${tag}: "${lastName}"`);
-        }
-      }
-
-      // Assign LANDING times based on spacing, with the final person landing exactly at baseline
-      // Then compute START time = landing - march
-      const count = arr.length;
-      arr.forEach((item, index) => {
-        const landingSec = baselineSec - ((count - 1 - index) * spacingSec);
-        item.startSec = landingSec - item.marchSeconds;
-        item.startHMS = secondsToHMS(item.startSec);
-      });
-
-      // Output
-      outputLines.push("");
-      for (const item of arr) {
-        outputLines.push(`(${tag}) ${item.name}: ${item.startHMS} UTC`);
-      }
-    }
-
-    $("output").textContent = outputLines.join("\n");
-
-    if (problems.length) {
-      $("errors").innerHTML =
-        `<span class="error">Notes:</span><br>` +
-        problems.map(x => `• ${escapeHtml(x)}`).join("<br>");
-    } else {
-      $("errors").innerHTML = `<span class="ok">Looks good.</span>`;
-    }
-
-    saveState();
-    $("status").textContent = "Saved.";
-    setTimeout(()=>{ $("status").textContent = ""; }, 1200);
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, (c) => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
-  }
-
-  async function copyOutput(){
-    const text = $("output").textContent || "";
-    if (!text.trim()) {
-      $("status").textContent = "Nothing to copy.";
-      setTimeout(()=>{ $("status").textContent = ""; }, 1200);
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(text);
-      $("status").textContent = "Copied ✅";
-      setTimeout(()=>{ $("status").textContent = ""; }, 1200);
-    } catch {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      $("status").textContent = "Copied ✅";
-      setTimeout(()=>{ $("status").textContent = ""; }, 1200);
-    }
-  }
-
-  function loadExample(){
-    $("title").value = "Turret 4";
-    $("baseline").value = "13:58:00";
-    $("spacing").value = "3";
-    $("allianceOrder").value = "WAR, Dth, AVr";
-    $("lastHit").value = "WAR=Killian; AVr=Lia";
-    $("defaultMarch").value = "";
-    $("input").value =
-`(AVr) Lia 00:25
-(WAR) Tam 00:54
-(WAR) Killian 00:53
-(Dth) Grey 00:49
-(AVr) Coffee 00:40
-(WAR) MHD 01:00
-(AVr) tony 00:31
-(WAR) RealJoker 01:11
-(WAR) yamal 00:53`;
-    saveState();
-    generate();
-  }
-
-  function clearAll(){
-    $("input").value = "";
-    $("output").textContent = "";
-    $("errors").innerHTML = "";
-    $("status").textContent = "Cleared.";
-    setTimeout(()=>{ $("status").textContent = ""; }, 1200);
-    saveState();
-  }
-
-  // Wire up
-  $("calcBtn").addEventListener("click", generate);
-  $("copyBtn").addEventListener("click", copyOutput);
-  $("loadExampleBtn").addEventListener("click", loadExample);
-  $("clearBtn").addEventListener("click", clearAll);
-
-  // Auto-save on change
-  ["title","baseline","spacing","defaultMarch","allianceOrder","lastHit","input"].forEach(id=>{
-    $(id).addEventListener("input", saveState);
-  });
-
-  loadState();
-  if ($("input").value.trim()) generate();
-</script>
-</body>
-</html>
-
+<div class="card">
+  <button class="primary" onclick="generate()">Generate</button>
+  <button
