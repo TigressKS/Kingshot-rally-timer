@@ -1,37 +1,32 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kingshot Rally Timer (UTC)</title>
 
 <style>
 :root{
-  --bg-dark:#0b1020;
-  --bg-light:#f3f4f6;
+  --bg:#0b1020;
   --card:#ffffff;
   --border:#d1d5db;
   --text:#111827;
   --muted:#6b7280;
   --danger:#b00020;
   --danger-bg:#ffe9ec;
-  --ok:#065f46;
-  --ok-bg:#ecfdf5;
 }
 
 body{
   margin:0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background:var(--bg-light);
+  background:#f3f4f6;
   color:var(--text);
 }
 
 .banner{
-  background:
-    linear-gradient(120deg,#0b1020,#1f2a5c,#0b1020);
+  background:linear-gradient(120deg,#0b1020,#1f2a5c,#0b1020);
   padding:28px 16px;
   text-align:center;
-  border-bottom:1px solid rgba(255,255,255,.08);
 }
 
 .banner h1{
@@ -46,12 +41,6 @@ body{
   color:transparent;
 }
 
-.banner p{
-  margin-top:8px;
-  font-size:15px;
-  color:rgba(255,255,255,.85);
-}
-
 .wrap{
   max-width:1100px;
   margin:0 auto;
@@ -61,24 +50,23 @@ body{
 .card{
   background:var(--card);
   border:1px solid var(--border);
-  border-radius:16px;
-  padding:16px;
-  margin-bottom:16px;
-  box-shadow:0 8px 20px rgba(0,0,0,.06);
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:14px;
 }
 
 label{
   font-weight:700;
   display:block;
-  margin:10px 0 6px;
+  margin:8px 0 4px;
 }
 
 input{
   width:100%;
-  padding:10px;
+  padding:8px;
   border:1px solid var(--border);
-  border-radius:12px;
-  font-size:15px;
+  border-radius:10px;
+  font-size:14px;
 }
 
 .grid{
@@ -92,84 +80,77 @@ input{
 
 .timeRow{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:8px;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:6px;
 }
 .timeRow input{ text-align:center; }
 
-.btns{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:14px;
-}
-
 button{
-  padding:10px 14px;
+  padding:8px 12px;
   border:none;
-  border-radius:12px;
-  font-size:15px;
+  border-radius:10px;
+  font-size:14px;
   cursor:pointer;
 }
-.primary{ background:#111827; color:white; }
+.primary{ background:#111827; color:#fff; }
 .ghost{ background:#eef2f7; }
 .danger{ background:var(--danger-bg); color:var(--danger); }
 
-.status{ font-size:13px; color:var(--muted); }
-
-.messages{
-  margin-top:10px;
-  font-size:13px;
-}
-.messages.warn{
-  background:var(--danger-bg);
-  color:var(--danger);
-  border-radius:12px;
-  padding:10px;
-}
-.messages.ok{
-  background:var(--ok-bg);
-  color:var(--ok);
-  border-radius:12px;
-  padding:10px;
+.btns{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px;
 }
 
 .allyHead{
   display:flex;
-  gap:10px;
+  gap:8px;
   align-items:center;
-  flex-wrap:wrap;
 }
 
 .players{
-  margin-top:10px;
+  margin-top:8px;
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:6px;
+}
+
+.playerHeader{
+  display:grid;
+  grid-template-columns:1.6fr 1fr auto;
+  font-size:12px;
+  font-weight:700;
+  color:var(--muted);
 }
 
 .playerRow{
   border:1px solid var(--border);
-  border-radius:12px;
-  padding:10px;
+  border-radius:10px;
+  padding:8px;
 }
-
-.playerGrid{
-  display:grid;
-  grid-template-columns:1.6fr .6fr .6fr .6fr auto;
-  gap:8px;
-}
-
-.playerGrid input{ text-align:center; }
-.playerGrid input.pName{ text-align:left; }
 
 .playerRow.collision{
   background:#fff4f6;
   border-color:rgba(176,0,32,.35);
 }
 
+.playerGrid{
+  display:grid;
+  grid-template-columns:1.6fr 1fr auto;
+  gap:8px;
+  align-items:center;
+}
+
+.marchWrap{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+}
+.marchWrap input{ text-align:center; }
+
 .meta{
-  margin-top:6px;
+  margin-top:4px;
   font-size:12px;
   color:var(--muted);
   display:flex;
@@ -180,17 +161,18 @@ button{
   white-space:pre-wrap;
   background:#f8fafc;
   border:1px solid var(--border);
-  border-radius:14px;
-  padding:12px;
+  border-radius:12px;
+  padding:10px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size:13px;
 }
 </style>
 </head>
 
 <body>
+
 <div class="banner">
   <h1>Kingshot Rally Timer</h1>
-  <p>UTC-based sequential rally timing calculator</p>
 </div>
 
 <div class="wrap">
@@ -198,12 +180,12 @@ button{
 <div class="card">
   <div class="grid">
     <div>
-      <label>Target name</label>
+      <label>Target</label>
       <input id="title" value="Turret 4">
     </div>
 
     <div>
-      <label>Baseline time (UTC)</label>
+      <label>Baseline UTC</label>
       <div class="timeRow">
         <input id="baseH" placeholder="H">
         <input id="baseM" placeholder="M">
@@ -212,37 +194,27 @@ button{
     </div>
 
     <div>
-      <label>Hit spacing</label>
-      <div class="timeRow">
-        <input id="spaceH" placeholder="H">
-        <input id="spaceM" placeholder="M">
-        <input id="spaceS" placeholder="S">
-      </div>
+      <label>Hit spacing (seconds)</label>
+      <input id="spacing" placeholder="e.g. 11">
     </div>
 
     <div>
       <label>Alliance order (optional)</label>
-      <input id="order" placeholder="war, dth, avr">
+      <input id="order">
     </div>
   </div>
 
   <label>Who hits last (optional)</label>
-  <input id="lastHit" placeholder="war=Killian; avr=Lia">
+  <input id="lastHit">
 
   <div class="btns">
     <button class="ghost" id="addAlliance">+ Add alliance</button>
     <button class="primary" id="generate">Generate</button>
-    <button class="ghost" id="copy">Copy output</button>
-    <button class="danger" id="clear">Clear</button>
-    <span class="status" id="status"></span>
+    <button class="ghost" id="copy">Copy</button>
   </div>
-
-  <div id="messages" class="messages"></div>
 </div>
 
-<div class="card">
-  <div id="alliances"></div>
-</div>
+<div id="alliances"></div>
 
 <div class="card">
   <div class="out" id="output"></div>
@@ -253,14 +225,13 @@ button{
 <script>
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2,"0");
-const toSec = (h,m,s)=>h*3600+m*60+s;
 
-function read(el,max=2){
-  el.value = el.value.replace(/\D/g,"").slice(0,max);
+function readNum(el){
+  el.value = el.value.replace(/\D/g,"");
   return Number(el.value||0);
 }
 
-function hmsStr(sec){
+function hms(sec){
   sec=((sec%86400)+86400)%86400;
   return pad(Math.floor(sec/3600))+":"+pad(Math.floor(sec%3600/60))+":"+pad(sec%60);
 }
@@ -273,9 +244,17 @@ function addAlliance(){
       <input class="tag" placeholder="Alliance tag">
       <button class="danger remove">Remove</button>
     </div>
+
+    <div class="playerHeader">
+      <div>Name</div>
+      <div>March time</div>
+      <div></div>
+    </div>
+
     <div class="players"></div>
     <button class="ghost addPlayer">+ Add player</button>
   `;
+
   const players=box.querySelector(".players");
 
   function addPlayer(){
@@ -283,10 +262,11 @@ function addAlliance(){
     row.className="playerRow";
     row.innerHTML=`
       <div class="playerGrid">
-        <input class="pName" placeholder="Name">
-        <input class="pH" placeholder="H">
-        <input class="pM" placeholder="M">
-        <input class="pS" placeholder="S">
+        <input class="name" placeholder="Name">
+        <div class="marchWrap">
+          <input class="m" placeholder="M">
+          <input class="s" placeholder="S">
+        </div>
         <button class="danger rm">✕</button>
       </div>
       <div class="meta">
@@ -305,46 +285,45 @@ function addAlliance(){
 }
 
 function generate(){
-  const base=toSec(read(baseH),read(baseM),read(baseS));
-  const spacing=toSec(read(spaceH),read(spaceM),read(spaceS));
-  if(spacing<=0){ $("messages").className="messages warn"; $("messages").textContent="Hit spacing must be > 0"; return; }
+  document.querySelectorAll(".playerRow").forEach(r=>r.classList.remove("collision"));
+
+  const base = readNum(baseH)*3600 + readNum(baseM)*60 + readNum(baseS);
+  const spacing = readNum(spacing);
+  if(spacing<=0) return;
 
   const out=[];
   out.push(`=== Rally Timings for ${title.value} ===`);
-  out.push(`Baseline Time: ${hmsStr(base)} (UTC)`);
+  out.push(`Baseline Time: ${hms(base)} (UTC)`);
 
-  document.querySelectorAll(".playerRow").forEach(r=>r.classList.remove("collision"));
+  const timeMap={};
 
-  const map={};
-  document.querySelectorAll(".card .card").forEach(()=>{});
-
-  const groups=[];
   document.querySelectorAll("#alliances .card").forEach(a=>{
     const tag=a.querySelector(".tag").value;
     if(!tag) return;
+
     const list=[];
     a.querySelectorAll(".playerRow").forEach(p=>{
-      const name=p.querySelector(".pName").value;
-      const sec=toSec(read(p.querySelector(".pH")),read(p.querySelector(".pM")),read(p.querySelector(".pS")));
-      if(name && sec>0) list.push({tag,name,sec,row:p});
+      const name=p.querySelector(".name").value;
+      const m=readNum(p.querySelector(".m"));
+      const s=readNum(p.querySelector(".s"));
+      if(name) list.push({name,sec:m*60+s,row:p});
     });
-    if(list.length) groups.push({tag,list});
-  });
 
-  groups.forEach(g=>{
-    g.list.sort((a,b)=>b.sec-a.sec);
-    g.list.forEach((p,i)=>{
-      const start=hmsStr(base - (g.list.length-1-i)*spacing - p.sec);
-      out.push(`(${g.tag}) ${p.name}: ${start} UTC`);
-      if(!map[start]) map[start]=[];
-      map[start].push(p);
-      p.row.querySelector(".meta").children[0].innerHTML=`Start: <b>${start}</b>`;
+    list.sort((a,b)=>b.sec-a.sec);
+
+    list.forEach((p,i)=>{
+      const start=hms(base-(list.length-1-i)*spacing-p.sec);
+      out.push(`(${tag}) ${p.name}: ${start} UTC`);
+      if(!timeMap[start]) timeMap[start]=[];
+      timeMap[start].push(p);
+      p.row.querySelector(".meta b").textContent=start;
     });
+
     out.push("");
   });
 
-  Object.values(map).forEach(list=>{
-    if(list.length>1) list.forEach(p=>p.row.classList.add("collision"));
+  Object.values(timeMap).forEach(arr=>{
+    if(arr.length>1) arr.forEach(p=>p.row.classList.add("collision"));
   });
 
   output.textContent=out.join("\n");
@@ -354,7 +333,7 @@ addAlliance();
 addAlliance.onclick=addAlliance;
 generate.onclick=generate;
 copy.onclick=()=>navigator.clipboard.writeText(output.textContent);
-clear.onclick=()=>location.reload();
 </script>
+
 </body>
 </html>
