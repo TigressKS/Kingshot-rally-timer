@@ -39,6 +39,11 @@
     background-clip:text;
     color:transparent;
   }
+  .banner p{
+    margin:8px 0 0;
+    font-size:14px;
+    color:rgba(255,255,255,.85);
+  }
 
   .wrap{ max-width:1100px; margin:0 auto; padding:16px; }
 
@@ -99,8 +104,6 @@
   }
   .allyHead .tag{ flex: 1 1 180px; }
 
-  .players{ margin-top:10px; display:flex; flex-direction:column; gap:8px; }
-
   .playerHeader{
     display:grid;
     grid-template-columns: 1.7fr 1fr auto;
@@ -111,13 +114,19 @@
     margin-top:10px;
     margin-bottom:6px;
   }
-
-  .playerHeader .marchHead{
+  .marchHead{
     display:grid;
     grid-template-columns: 1fr 1fr;
     gap:6px;
     text-align:center;
+    align-items:end;
   }
+  .marchHead .title{
+    grid-column:1 / -1;
+    text-align:center;
+  }
+
+  .players{ margin-top:0; display:flex; flex-direction:column; gap:8px; }
 
   .playerRow{
     border:1px solid var(--border);
@@ -161,12 +170,20 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size:13px;
   }
+
+  .note{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:6px;
+    line-height:1.35;
+  }
 </style>
 </head>
 
 <body>
   <div class="banner">
     <h1>Kingshot Rally Timer</h1>
+    <p>Baseline = final hit of the whole chain (UTC). Alliances run sequentially.</p>
   </div>
 
   <div class="wrap">
@@ -184,26 +201,30 @@
             <input id="baseM" inputmode="numeric" placeholder="M">
             <input id="baseS" inputmode="numeric" placeholder="S">
           </div>
+          <div class="note">24-hour UTC. Minutes/seconds clamp to 0–59.</div>
         </div>
 
         <div>
           <label for="spacing">Hit spacing (seconds)</label>
           <input id="spacing" inputmode="numeric" placeholder="e.g. 11">
+          <div class="note">Type <b>11</b> = 11 seconds.</div>
         </div>
 
         <div>
           <label for="order">Alliance order (optional)</label>
           <input id="order" placeholder="war, dth, avr">
+          <div class="note">If blank, uses the order shown below.</div>
         </div>
       </div>
 
       <label for="lastHit">Who hits last (optional)</label>
       <input id="lastHit" placeholder="war=Killian; avr=Lia">
+      <div class="note">Format: <b>TAG=Name</b> separated by semicolons. Tags match exactly (case-sensitive).</div>
 
       <div class="btns">
-        <button class="ghost" id="btnAddAlliance">+ Add alliance</button>
-        <button class="primary" id="btnGenerate">Generate</button>
-        <button class="ghost" id="btnCopy">Copy</button>
+        <button class="ghost" id="btnAddAlliance" type="button">+ Add alliance</button>
+        <button class="primary" id="btnGenerate" type="button">Generate</button>
+        <button class="ghost" id="btnCopy" type="button">Copy</button>
       </div>
     </div>
 
@@ -238,12 +259,15 @@
     const h = digitsOnly($("baseH"), 2);
     const m = digitsOnly($("baseM"), 2);
     const s = digitsOnly($("baseS"), 2);
-    // clamp minutes/seconds
+
+    const hh = Math.min(Math.max(h, 0), 23);
     const mm = Math.min(Math.max(m, 0), 59);
     const ss = Math.min(Math.max(s, 0), 59);
-    $("baseM").value = mm ? String(mm) : $("baseM").value;
-    $("baseS").value = ss ? String(ss) : $("baseS").value;
-    const hh = Math.min(Math.max(h, 0), 23);
+
+    $("baseH").value = hh === 0 && ($("baseH").value === "") ? "" : String(hh);
+    $("baseM").value = $("baseM").value === "" ? "" : pad2(mm);
+    $("baseS").value = $("baseS").value === "" ? "" : pad2(ss);
+
     return hh * 3600 + mm * 60 + ss;
   }
 
@@ -283,10 +307,9 @@
       <div class="playerHeader">
         <div>Name</div>
         <div class="marchHead">
-          <div>March time</div>
-          <div></div>
-          <div style="grid-column:1/2; text-align:center; font-weight:800;">M</div>
-          <div style="grid-column:2/3; text-align:center; font-weight:800;">S</div>
+          <div class="title">March time</div>
+          <div>M</div>
+          <div>S</div>
         </div>
         <div></div>
       </div>
@@ -318,19 +341,19 @@
         </div>
       `;
 
-      // digits only and autopad seconds on blur
       const mEl = row.querySelector(".pM");
       const sEl = row.querySelector(".pS");
+
+      // digits only + clamp and autopad seconds on blur
       mEl.addEventListener("input", () => digitsOnly(mEl, 2));
       sEl.addEventListener("input", () => digitsOnly(sEl, 2));
       sEl.addEventListener("blur", () => {
         const s = digitsOnly(sEl, 2);
-        // keep in 0–59, and pad
         const ss = Math.min(Math.max(s, 0), 59);
-        sEl.value = pad2(ss);
+        sEl.value = sEl.value === "" ? "" : pad2(ss);
       });
 
-      // keyboard: Enter in seconds jumps to next row name (or creates one)
+      // Keyboard: Enter in seconds => focus next row name, or create new row
       sEl.addEventListener("keydown", (e) => {
         if (e.key === "Enter"){
           e.preventDefault();
@@ -371,7 +394,7 @@
     clearCollisionsAndMeta();
 
     const base = readBaselineSeconds();
-    const spacing = digitsOnly($("spacing"), 4); // allow 9999 seconds if needed
+    const spacing = digitsOnly($("spacing"), 4);
     if (!spacing || spacing <= 0){
       $("output").textContent = "Enter hit spacing in seconds (e.g. 11).";
       return;
@@ -381,10 +404,10 @@
     const order = parseOrder();
     const lastHitMap = parseLastHitMap();
 
-    // Collect groups
-    const groups = new Map(); // tag -> players[]
     const allianceCards = Array.from($("alliances").querySelectorAll(".allyCard"));
 
+    // Collect groups
+    const groups = new Map(); // tag -> players[]
     for (const card of allianceCards){
       const tag = (card.querySelector(".tag").value || "").trim();
       if (!tag) continue;
@@ -400,17 +423,13 @@
         const marchSec = mm * 60 + ss;
 
         if (!name && marchSec === 0) continue;
+
         if (!name){
           row.querySelector(".statusVal").textContent = "Missing name";
           continue;
         }
-        // march time can be 0, but mark it
-        if (marchSec === 0){
-          row.querySelector(".statusVal").textContent = "March is 0";
-        } else {
-          row.querySelector(".statusVal").textContent = "OK";
-        }
 
+        row.querySelector(".statusVal").textContent = marchSec === 0 ? "March is 0" : "OK";
         players.push({ tag, name, marchSec, rowEl: row });
       }
 
@@ -422,7 +441,7 @@
       return;
     }
 
-    // Determine final alliance order: typed order first, then remaining in on-screen order
+    // Final alliance order: typed order first, then remaining in on-screen order
     const finalOrder = [];
     const seen = new Set();
 
@@ -439,31 +458,16 @@
         seen.add(t);
       }
     }
-    // any leftovers (unlikely)
     for (const t of groups.keys()){
       if (!seen.has(t)) finalOrder.push(t);
     }
 
-    // Build output
-    const out = [];
-    out.push(`=== Rally Timings for ${title} ===`);
-    out.push(`Baseline Time: ${hmsFromSeconds(base)} (UTC)`);
+    // Prepare per-alliance lists (sorted + last hitter forced last)
+    const allianceLists = [];
+    for (const tag of finalOrder){
+      let list = (groups.get(tag) || []).slice()
+        .sort((a,b) => b.marchSec - a.marchSec || a.name.localeCompare(b.name));
 
-    const startMap = new Map(); // startHMS -> players[]
-
-    function noteStart(timeStr, p){
-      if (!startMap.has(timeStr)) startMap.set(timeStr, []);
-      startMap.get(timeStr).push(p);
-    }
-
-    for (let gi = 0; gi < finalOrder.length; gi++){
-      const tag = finalOrder[gi];
-      let list = groups.get(tag) || [];
-
-      // Sort slowest march first (starts earlier)
-      list = list.slice().sort((a,b) => b.marchSec - a.marchSec || a.name.localeCompare(b.name));
-
-      // Force last hitter last
       const lastName = lastHitMap.get(tag);
       if (lastName){
         const idx = list.findIndex(p => p.name.toLowerCase() === lastName.toLowerCase());
@@ -473,54 +477,83 @@
         }
       }
 
-      const count = list.length;
-      list.forEach((p, i) => {
-        const landing = base - ((count - 1 - i) * spacing);
-        const startSec = landing - p.marchSec;
-        const startStr = hmsFromSeconds(startSec);
-
-        out.push(`(${tag}) ${p.name}: ${startStr} UTC`);
-        p.rowEl.querySelector(".startVal").textContent = startStr;
-        noteStart(startStr, p);
-      });
-
-      if (gi !== finalOrder.length - 1) out.push("");
+      allianceLists.push({ tag, list });
     }
 
-    // Collisions
+    // Flatten into ONE sequential list across alliances
+    const flat = [];
+    for (const a of allianceLists){
+      for (const p of a.list) flat.push(p);
+    }
+
+    // Assign landing times continuously across ALL players
+    // Last player overall lands on baseline.
+    const N = flat.length;
+    const startMap = new Map(); // startHMS -> players[]
+
+    function noteStart(timeStr, p){
+      if (!startMap.has(timeStr)) startMap.set(timeStr, []);
+      startMap.get(timeStr).push(p);
+    }
+
+    flat.forEach((p, idx) => {
+      const landing = base - ((N - 1 - idx) * spacing);
+      const startSec = landing - p.marchSec;
+      const startStr = hmsFromSeconds(startSec);
+      p._startStr = startStr;
+      p.rowEl.querySelector(".startVal").textContent = startStr;
+      noteStart(startStr, p);
+    });
+
+    // Build output grouped by alliance (but sequential times)
+    const out = [];
+    out.push(`=== Rally Timings for ${title} ===`);
+    out.push(`Baseline Time: ${hmsFromSeconds(base)} (UTC)`);
+
+    for (let i = 0; i < allianceLists.length; i++){
+      const { tag, list } = allianceLists[i];
+      for (const p of list){
+        out.push(`(${tag}) ${p.name}: ${p._startStr} UTC`);
+      }
+      if (i !== allianceLists.length - 1) out.push("");
+    }
+
+    // Collisions (same start second)
     for (const [t, arr] of startMap.entries()){
       if (arr.length > 1){
-        arr.forEach(p => p.rowEl.classList.add("collision"));
-        arr.forEach(p => p.rowEl.querySelector(".statusVal").textContent = "COLLISION");
+        arr.forEach(p => {
+          p.rowEl.classList.add("collision");
+          p.rowEl.querySelector(".statusVal").textContent = "COLLISION";
+        });
       }
     }
 
     $("output").textContent = out.join("\n");
   }
 
-  // Wire buttons (no name collisions now)
+  // Wire buttons (no name collisions)
   $("btnAddAlliance").addEventListener("click", addAllianceBlock);
   $("btnGenerate").addEventListener("click", generateTimings);
   $("btnCopy").addEventListener("click", () => {
-    navigator.clipboard.writeText(($("output").textContent || "").trim());
+    const text = ($("output").textContent || "").trim();
+    if (!text) return;
+    navigator.clipboard.writeText(text);
   });
 
-  // Make baseline seconds auto-pad on blur (nice)
+  // Digits-only for baseline and spacing
   ["baseH","baseM","baseS"].forEach(id => {
     const el = $(id);
     el.addEventListener("input", () => digitsOnly(el, 2));
     el.addEventListener("blur", () => {
       const v = digitsOnly(el, 2);
-      // pad minutes/seconds, keep hours as typed
-      if (id !== "baseH") el.value = pad2(Math.min(v, 59));
-      else el.value = String(Math.min(v, 23));
+      if (id === "baseH") el.value = el.value === "" ? "" : String(Math.min(v, 23));
+      if (id === "baseM") el.value = el.value === "" ? "" : pad2(Math.min(v, 59));
+      if (id === "baseS") el.value = el.value === "" ? "" : pad2(Math.min(v, 59));
     });
   });
-
-  // spacing digits only
   $("spacing").addEventListener("input", () => digitsOnly($("spacing"), 4));
 
-  // init with one alliance block
+  // Init with one alliance
   addAllianceBlock();
 </script>
 
