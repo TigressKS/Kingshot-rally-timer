@@ -14,6 +14,9 @@
     --bg:#f3f4f6;
     --danger:#b00020;
     --danger-bg:#ffe9ec;
+    --ok:#065f46;
+    --ok-bg:#ecfdf5;
+    --accent:#111827;
   }
 
   body{
@@ -25,7 +28,7 @@
 
   .banner{
     background:linear-gradient(120deg,#0b1020,#1f2a5c,#0b1020);
-    padding:28px 16px;
+    padding:28px 16px 18px;
     text-align:center;
   }
   .banner h1{
@@ -57,13 +60,14 @@
   }
 
   label{ font-weight:750; display:block; margin:8px 0 4px; }
-  input{
+  input, select{
     width:100%;
     box-sizing:border-box;
     padding:9px 10px;
     border:1px solid var(--border);
     border-radius:10px;
     font-size:14px;
+    background:#fff;
   }
 
   .grid{
@@ -82,7 +86,7 @@
   }
   .timeRow input{ text-align:center; }
 
-  .btns{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .btns{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center; }
   button{
     padding:9px 12px;
     border:none;
@@ -90,9 +94,42 @@
     font-size:14px;
     cursor:pointer;
   }
-  .primary{ background:#111827; color:#fff; }
+  .primary{ background:var(--accent); color:#fff; }
   .ghost{ background:#eef2f7; }
   .danger{ background:var(--danger-bg); color:var(--danger); }
+
+  .note{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:6px;
+    line-height:1.35;
+  }
+
+  .row2{
+    display:grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap:10px;
+    align-items:end;
+  }
+  @media(max-width:900px){
+    .row2{ grid-template-columns: 1fr; }
+  }
+
+  .modeBox{
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:10px;
+    background:#fafafa;
+  }
+  .modeLine{
+    display:flex;
+    gap:8px;
+    align-items:flex-start;
+    margin:6px 0;
+    font-size:14px;
+  }
+  .modeLine input{ width:auto; margin-top:2px; }
+  .modeLine small{ color:var(--muted); display:block; margin-top:2px; }
 
   .allyCard{ margin-top:12px; }
 
@@ -171,11 +208,15 @@
     font-size:13px;
   }
 
-  .note{
+  .pillOk{
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:999px;
+    background:var(--ok-bg);
+    color:var(--ok);
+    border:1px solid rgba(6,95,70,.18);
     font-size:12px;
-    color:var(--muted);
-    margin-top:6px;
-    line-height:1.35;
+    font-weight:700;
   }
 </style>
 </head>
@@ -217,14 +258,47 @@
         </div>
       </div>
 
-      <label for="lastHit">Who hits last (optional)</label>
-      <input id="lastHit" placeholder="war=Killian; avr=Lia">
-      <div class="note">Format: <b>TAG=Name</b> separated by semicolons. Tags match exactly (case-sensitive).</div>
+      <div class="row2" style="margin-top:12px;">
+        <div>
+          <label for="lastHit">Who hits last (optional)</label>
+          <input id="lastHit" placeholder="war=Killian; avr=Lia">
+          <div class="note">Format: <b>TAG=Name</b> separated by semicolons. Tags match exactly.</div>
+        </div>
+
+        <div class="modeBox">
+          <label style="margin-top:0;">Stagger mode</label>
+          <div class="modeLine">
+            <input type="radio" name="mode" id="modeLastOnly" value="lastOnly" checked>
+            <div>
+              <b>Only last hitter is delayed</b>
+              <small>Everyone else in that alliance hits together; last hitter hits +spacing later.</small>
+            </div>
+          </div>
+          <div class="modeLine">
+            <input type="radio" name="mode" id="modeAll" value="all">
+            <div>
+              <b>Stagger everyone</b>
+              <small>Every rally gets its own spaced slot (old behaviour).</small>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label>Target presets</label>
+          <select id="presetSelect"></select>
+          <div class="btns" style="margin-top:8px;">
+            <button class="ghost" id="btnSavePreset" type="button">Save preset</button>
+            <button class="danger" id="btnDeletePreset" type="button">Delete</button>
+          </div>
+          <div class="note">Presets save alliances + march times for different targets (Turret/Castle/etc.).</div>
+        </div>
+      </div>
 
       <div class="btns">
         <button class="ghost" id="btnAddAlliance" type="button">+ Add alliance</button>
         <button class="primary" id="btnGenerate" type="button">Generate</button>
         <button class="ghost" id="btnCopy" type="button">Copy</button>
+        <span class="pillOk" id="savedPill" style="display:none;">Saved</span>
       </div>
     </div>
 
@@ -237,6 +311,8 @@
 
 <script>
   const $ = (id) => document.getElementById(id);
+
+  const PRESET_KEY = "ks_rally_timer_presets_v1";
 
   function digitsOnly(el, maxLen=2){
     const cleaned = (el.value || "").replace(/\D/g, "").slice(0, maxLen);
@@ -264,9 +340,10 @@
     const mm = Math.min(Math.max(m, 0), 59);
     const ss = Math.min(Math.max(s, 0), 59);
 
-    $("baseH").value = hh === 0 && ($("baseH").value === "") ? "" : String(hh);
-    $("baseM").value = $("baseM").value === "" ? "" : pad2(mm);
-    $("baseS").value = $("baseS").value === "" ? "" : pad2(ss);
+    // tidy
+    if ($("baseH").value !== "") $("baseH").value = String(hh);
+    if ($("baseM").value !== "") $("baseM").value = pad2(mm);
+    if ($("baseS").value !== "") $("baseS").value = pad2(ss);
 
     return hh * 3600 + mm * 60 + ss;
   }
@@ -295,7 +372,17 @@
     return map;
   }
 
-  function addAllianceBlock(){
+  function getMode(){
+    return $("modeAll").checked ? "all" : "lastOnly";
+  }
+
+  function showSavedPill(){
+    const pill = $("savedPill");
+    pill.style.display = "inline-block";
+    setTimeout(() => pill.style.display = "none", 1000);
+  }
+
+  function addAllianceBlock(data){
     const box = document.createElement("div");
     box.className = "card allyCard";
     box.innerHTML = `
@@ -322,8 +409,9 @@
     `;
 
     const playersEl = box.querySelector(".players");
+    const tagEl = box.querySelector(".tag");
 
-    function addPlayerRow(){
+    function addPlayerRow(pData){
       const row = document.createElement("div");
       row.className = "playerRow";
       row.innerHTML = `
@@ -341,19 +429,28 @@
         </div>
       `;
 
+      const nameEl = row.querySelector(".pName");
       const mEl = row.querySelector(".pM");
       const sEl = row.querySelector(".pS");
+
+      // Load values
+      if (pData){
+        nameEl.value = pData.name ?? "";
+        mEl.value = pData.m ?? "";
+        sEl.value = pData.s ?? "";
+      }
 
       // digits only + clamp and autopad seconds on blur
       mEl.addEventListener("input", () => digitsOnly(mEl, 2));
       sEl.addEventListener("input", () => digitsOnly(sEl, 2));
       sEl.addEventListener("blur", () => {
+        if (sEl.value === "") return;
         const s = digitsOnly(sEl, 2);
         const ss = Math.min(Math.max(s, 0), 59);
-        sEl.value = sEl.value === "" ? "" : pad2(ss);
+        sEl.value = pad2(ss);
       });
 
-      // Keyboard: Enter in seconds => focus next row name, or create new row
+      // Enter in seconds => focus next row name, or create new row
       sEl.addEventListener("keydown", (e) => {
         if (e.key === "Enter"){
           e.preventDefault();
@@ -374,12 +471,22 @@
       playersEl.appendChild(row);
     }
 
-    box.querySelector(".addPlayer").addEventListener("click", addPlayerRow);
+    box.querySelector(".addPlayer").addEventListener("click", () => addPlayerRow());
     box.querySelector(".removeAlliance").addEventListener("click", () => box.remove());
 
-    // start with one row
-    addPlayerRow();
+    // If loading from preset
+    if (data?.tag) tagEl.value = data.tag;
+    if (data?.players?.length){
+      data.players.forEach(p => addPlayerRow(p));
+    } else {
+      addPlayerRow();
+    }
+
     $("alliances").appendChild(box);
+  }
+
+  function clearAlliances(){
+    $("alliances").innerHTML = "";
   }
 
   function clearCollisionsAndMeta(){
@@ -390,6 +497,99 @@
     });
   }
 
+  // ---------- Presets ----------
+  function readPresets(){
+    try{
+      const raw = localStorage.getItem(PRESET_KEY);
+      if (!raw) return {};
+      const obj = JSON.parse(raw);
+      return obj && typeof obj === "object" ? obj : {};
+    }catch{
+      return {};
+    }
+  }
+
+  function writePresets(presets){
+    localStorage.setItem(PRESET_KEY, JSON.stringify(presets));
+  }
+
+  function getCurrentSetupForPreset(){
+    const allianceCards = Array.from($("alliances").querySelectorAll(".allyCard"));
+    const blocks = allianceCards.map(card => {
+      const tag = (card.querySelector(".tag").value || "").trim();
+      const players = Array.from(card.querySelectorAll(".playerRow")).map(row => ({
+        name: (row.querySelector(".pName").value || "").trim(),
+        m: (row.querySelector(".pM").value || "").trim(),
+        s: (row.querySelector(".pS").value || "").trim(),
+      }));
+      return { tag, players };
+    });
+    return { blocks };
+  }
+
+  function loadPreset(name){
+    const presets = readPresets();
+    const data = presets[name];
+    if (!data) return;
+
+    clearAlliances();
+    (data.blocks || []).forEach(b => addAllianceBlock(b));
+  }
+
+  function refreshPresetSelect(selected){
+    const presets = readPresets();
+    const names = Object.keys(presets).sort((a,b)=>a.localeCompare(b));
+    const sel = $("presetSelect");
+    sel.innerHTML = "";
+
+    // Default option
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "— Select preset —";
+    sel.appendChild(opt0);
+
+    for (const n of names){
+      const opt = document.createElement("option");
+      opt.value = n;
+      opt.textContent = n;
+      sel.appendChild(opt);
+    }
+
+    if (selected && names.includes(selected)){
+      sel.value = selected;
+    } else {
+      sel.value = "";
+    }
+  }
+
+  function savePresetFlow(){
+    const name = prompt("Name this preset (e.g., Turret 4, Castle):");
+    if (!name) return;
+
+    const presets = readPresets();
+    presets[name] = getCurrentSetupForPreset();
+    writePresets(presets);
+
+    refreshPresetSelect(name);
+    $("presetSelect").value = name;
+    showSavedPill();
+  }
+
+  function deletePresetFlow(){
+    const sel = $("presetSelect").value;
+    if (!sel) return;
+    const ok = confirm(`Delete preset "${sel}"?`);
+    if (!ok) return;
+
+    const presets = readPresets();
+    delete presets[sel];
+    writePresets(presets);
+
+    refreshPresetSelect("");
+    showSavedPill();
+  }
+
+  // ---------- Timing Generation ----------
   function generateTimings(){
     clearCollisionsAndMeta();
 
@@ -400,6 +600,7 @@
       return;
     }
 
+    const mode = getMode();
     const title = ($("title").value || "").trim() || "Target";
     const order = parseOrder();
     const lastHitMap = parseLastHitMap();
@@ -476,19 +677,35 @@
           list.push(picked);
         }
       }
-
       allianceLists.push({ tag, list });
     }
 
-    // Flatten into ONE sequential list across alliances
-    const flat = [];
+    // Build EVENTS (landing times) for sequential chain
+    // mode "all": each player is its own event
+    // mode "lastOnly": for each alliance:
+    //   - if 1 player => one event (last)
+    //   - if >1 players => event A = all non-last together, event B = last
+    const events = []; // each event: { tag, players: [] }
+
     for (const a of allianceLists){
-      for (const p of a.list) flat.push(p);
+      const list = a.list;
+      if (mode === "all"){
+        for (const p of list){
+          events.push({ tag: a.tag, players: [p] });
+        }
+      } else { // lastOnly
+        if (list.length <= 1){
+          events.push({ tag: a.tag, players: list.slice() });
+        } else {
+          const nonLast = list.slice(0, -1);
+          const last = list.slice(-1);
+          events.push({ tag: a.tag, players: nonLast });
+          events.push({ tag: a.tag, players: last });
+        }
+      }
     }
 
-    // Assign landing times continuously across ALL players
-    // Last player overall lands on baseline.
-    const N = flat.length;
+    const E = events.length;
     const startMap = new Map(); // startHMS -> players[]
 
     function noteStart(timeStr, p){
@@ -496,16 +713,20 @@
       startMap.get(timeStr).push(p);
     }
 
-    flat.forEach((p, idx) => {
-      const landing = base - ((N - 1 - idx) * spacing);
-      const startSec = landing - p.marchSec;
-      const startStr = hmsFromSeconds(startSec);
-      p._startStr = startStr;
-      p.rowEl.querySelector(".startVal").textContent = startStr;
-      noteStart(startStr, p);
+    // Assign landing times across events: last event lands at baseline
+    events.forEach((ev, idx) => {
+      const landing = base - ((E - 1 - idx) * spacing);
+
+      for (const p of ev.players){
+        const startSec = landing - p.marchSec;
+        const startStr = hmsFromSeconds(startSec);
+        p._startStr = startStr;
+        p.rowEl.querySelector(".startVal").textContent = startStr;
+        noteStart(startStr, p);
+      }
     });
 
-    // Build output grouped by alliance (but sequential times)
+    // Output grouped by alliance (but sequential chain)
     const out = [];
     out.push(`=== Rally Timings for ${title} ===`);
     out.push(`Baseline Time: ${hmsFromSeconds(base)} (UTC)`);
@@ -531,13 +752,22 @@
     $("output").textContent = out.join("\n");
   }
 
-  // Wire buttons (no name collisions)
-  $("btnAddAlliance").addEventListener("click", addAllianceBlock);
+  // Wire buttons
+  $("btnAddAlliance").addEventListener("click", () => addAllianceBlock());
   $("btnGenerate").addEventListener("click", generateTimings);
   $("btnCopy").addEventListener("click", () => {
     const text = ($("output").textContent || "").trim();
     if (!text) return;
     navigator.clipboard.writeText(text);
+  });
+
+  $("btnSavePreset").addEventListener("click", savePresetFlow);
+  $("btnDeletePreset").addEventListener("click", deletePresetFlow);
+  $("presetSelect").addEventListener("change", (e) => {
+    const name = e.target.value;
+    if (!name) return;
+    loadPreset(name);
+    showSavedPill();
   });
 
   // Digits-only for baseline and spacing
@@ -553,7 +783,8 @@
   });
   $("spacing").addEventListener("input", () => digitsOnly($("spacing"), 4));
 
-  // Init with one alliance
+  // Init
+  refreshPresetSelect("");
   addAllianceBlock();
 </script>
 
